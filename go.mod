@@ -3,7 +3,6 @@ module github.com/owlto-finance/utils-go
 go 1.21
 
 require (
-	github.com/go-sql-driver/mysql v1.7.1
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml v1.9.5

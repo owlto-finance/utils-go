@@ -1,48 +1,64 @@
 package config
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
-	"text/template"
+	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/mitchellh/mapstructure"
+	"github.com/owlto-finance/utils-go/system"
+	"github.com/pelletier/go-toml"
 	"github.com/spf13/viper"
 )
 
-var configTemplate *template.Template
-
 // WriteConfigFile renders config using the template and writes it to configFilePath.
 func WriteConfigFile(configFilePath string, config interface{}) error {
-	var buffer bytes.Buffer
+	fileType := strings.TrimPrefix(filepath.Ext(configFilePath), ".")
 
-	if err := configTemplate.Execute(&buffer, config); err != nil {
+	configMap := make(map[string]interface{})
+	if err := mapstructure.Decode(config, &configMap); err != nil {
+		return fmt.Errorf("error decoding struct to map: %w", err)
+
+	}
+	err := system.MakedirAll(filepath.Dir(configFilePath))
+	if err != nil {
 		return err
 	}
 
-	if err := os.WriteFile(configFilePath, buffer.Bytes(), 0o600); err != nil {
+	var data []byte
+	if fileType == "toml" {
+		// Marshal the map to TOML format
+		data, err = toml.Marshal(configMap)
+		if err != nil {
+			return fmt.Errorf("error marshaling map to TOML: %w", err)
+		}
+	} else {
+		return fmt.Errorf("unsupport config file type: %s, only toml is support", fileType)
+	}
+
+	if err := os.WriteFile(configFilePath, data, 0o600); err != nil {
 		return fmt.Errorf("failed to write file: %w", err)
 	}
 
 	return nil
 }
 
-func GetConfig(configFilePath string, defaultConfig interface{}) (interface{}, error) {
+func GetConfig(configFilePath string, defaultConfig interface{}) error {
 	filename := filepath.Base(configFilePath)
-	fileType := filepath.Ext(filename)
+	fileType := strings.TrimPrefix(filepath.Ext(configFilePath), ".")
 	v := viper.New()
 	v.SetConfigType(fileType)
 	v.SetConfigName(filename)
-	v.AddConfigPath(configFilePath)
+	v.AddConfigPath(filepath.Dir(configFilePath))
 
 	if err := v.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("failed to read in %s: %w", configFilePath, err)
+		return fmt.Errorf("failed to read in %s: %w", configFilePath, err)
 	}
 
 	if err := v.Unmarshal(&defaultConfig); err != nil {
-		return nil, fmt.Errorf("error extracting app config: %w", err)
+		return fmt.Errorf("error extracting app config: %w", err)
 	}
 
-	return &defaultConfig, nil
+	return nil
 }

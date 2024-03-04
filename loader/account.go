@@ -15,20 +15,20 @@ type Account struct {
 }
 
 type AccountManager struct {
-	idAccounts          map[int64]*Account
-	chainInfoIdAccounts map[int64]*Account
-	db                  *sql.DB
-	alerter             alert.Alerter
-	mutex               *sync.RWMutex
+	idAccounts         map[int64]*Account
+	addressCidAccounts map[string]map[int64]*Account
+	db                 *sql.DB
+	alerter            alert.Alerter
+	mutex              *sync.RWMutex
 }
 
 func NewAccountManager(db *sql.DB, alerter alert.Alerter) *AccountManager {
 	return &AccountManager{
-		idAccounts:          make(map[int64]*Account),
-		chainInfoIdAccounts: make(map[int64]*Account),
-		db:                  db,
-		alerter:             alerter,
-		mutex:               &sync.RWMutex{},
+		idAccounts:         make(map[int64]*Account),
+		addressCidAccounts: make(map[string]map[int64]*Account),
+		db:                 db,
+		alerter:            alerter,
+		mutex:              &sync.RWMutex{},
 	}
 }
 
@@ -39,11 +39,22 @@ func (mgr *AccountManager) GetAccountById(id int64) (*Account, bool) {
 	return acc, ok
 }
 
-func (mgr *AccountManager) GetAccountByChainInfoId(id int64) (*Account, bool) {
+func (mgr *AccountManager) HasAddress(address string) bool {
 	mgr.mutex.RLock()
-	acc, ok := mgr.chainInfoIdAccounts[id]
+	_, ok := mgr.addressCidAccounts[address]
 	mgr.mutex.RUnlock()
-	return acc, ok
+	return ok
+}
+
+func (mgr *AccountManager) GetAccountByAddressCid(address string, cid int64) (*Account, bool) {
+	mgr.mutex.RLock()
+	defer mgr.mutex.RUnlock()
+	accs, ok := mgr.addressCidAccounts[address]
+	if ok {
+		acc, ok := accs[cid]
+		return acc, ok
+	}
+	return nil, false
 }
 
 func (mgr *AccountManager) LoadAllAccounts() {
@@ -58,7 +69,7 @@ func (mgr *AccountManager) LoadAllAccounts() {
 	defer rows.Close()
 
 	idAccounts := make(map[int64]*Account)
-	chainInfoIdAccounts := make(map[int64]*Account)
+	addressCidAccounts := make(map[string]map[int64]*Account)
 	counter := 0
 
 	// Iterate over the result set
@@ -68,14 +79,19 @@ func (mgr *AccountManager) LoadAllAccounts() {
 			mgr.alerter.AlertText("scan t_account row error", err)
 		} else {
 			idAccounts[acc.Id] = &acc
-			chainInfoIdAccounts[acc.ChainInfoId] = &acc
+			accs, ok := addressCidAccounts[acc.Address]
+			if !ok {
+				accs = make(map[int64]*Account)
+				addressCidAccounts[acc.Address] = accs
+			}
+			accs[acc.ChainInfoId] = &acc
 			counter++
 		}
 	}
 
 	mgr.mutex.Lock()
 	mgr.idAccounts = idAccounts
-	mgr.chainInfoIdAccounts = chainInfoIdAccounts
+	mgr.addressCidAccounts = addressCidAccounts
 	mgr.mutex.Unlock()
 	log.Println("load all account: ", counter)
 

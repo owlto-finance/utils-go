@@ -14,8 +14,8 @@ type LarkAlerter struct {
 	webhook string
 }
 
-func NewLarkAlerter(webhook string) LarkAlerter {
-	return LarkAlerter{
+func NewLarkAlerter(webhook string) *LarkAlerter {
+	return &LarkAlerter{
 		webhook: webhook,
 	}
 }

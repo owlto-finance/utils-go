@@ -30,8 +30,8 @@ type DstTxManager struct {
 	//mutex   *sync.RWMutex
 }
 
-func NewDstTxManager(db *sql.DB, alerter alert.Alerter) AccountManager {
-	return AccountManager{
+func NewDstTxManager(db *sql.DB, alerter alert.Alerter) *AccountManager {
+	return &AccountManager{
 		db:      db,
 		alerter: alerter,
 		//mutex:   &sync.RWMutex{},

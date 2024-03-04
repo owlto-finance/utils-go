@@ -3,6 +3,7 @@ package loader
 import (
 	"database/sql"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -47,13 +48,13 @@ func (mgr *ChainInfoManager) GetChainInfoById(id int64) (*ChainInfo, bool) {
 }
 func (mgr *ChainInfoManager) GetChainInfoByChainId(chainId string) (*ChainInfo, bool) {
 	mgr.mutex.RLock()
-	chain, ok := mgr.chainIdChains[chainId]
+	chain, ok := mgr.chainIdChains[strings.ToLower(strings.TrimSpace(chainId))]
 	mgr.mutex.RUnlock()
 	return chain, ok
 }
 func (mgr *ChainInfoManager) GetChainInfoByName(name string) (*ChainInfo, bool) {
 	mgr.mutex.RLock()
-	chain, ok := mgr.nameChains[name]
+	chain, ok := mgr.nameChains[strings.ToLower(strings.TrimSpace(name))]
 	mgr.mutex.RUnlock()
 	return chain, ok
 }
@@ -81,14 +82,17 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 		if err := rows.Scan(&chain.Id, &chain.ChainId, &chain.Name, &chain.IsTestnet, &chain.RpcEndPoint, &chain.Disabled); err != nil {
 			mgr.alerter.AlertText("scan t_chain_info row error", err)
 		} else {
+			chain.ChainId = strings.TrimSpace(chain.ChainId)
+			chain.Name = strings.TrimSpace(chain.Name)
+
 			chain.Client, err = ethclient.Dial(chain.RpcEndPoint)
 			if err != nil {
 				mgr.alerter.AlertText("create client error", err)
 				continue
 			}
 			idChains[chain.Id] = &chain
-			chainIdChains[chain.ChainId] = &chain
-			nameChains[chain.Name] = &chain
+			chainIdChains[strings.ToLower(chain.ChainId)] = &chain
+			nameChains[strings.ToLower(chain.Name)] = &chain
 			counter++
 		}
 	}

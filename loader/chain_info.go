@@ -28,8 +28,8 @@ type ChainInfoManager struct {
 	mutex         *sync.RWMutex
 }
 
-func NewChainInfoManager(db *sql.DB, alerter alert.Alerter) ChainInfoManager {
-	return ChainInfoManager{
+func NewChainInfoManager(db *sql.DB, alerter alert.Alerter) *ChainInfoManager {
+	return &ChainInfoManager{
 		idChains:      make(map[int64]*ChainInfo),
 		chainIdChains: make(map[string]*ChainInfo),
 		nameChains:    make(map[string]*ChainInfo),

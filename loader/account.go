@@ -22,8 +22,8 @@ type AccountManager struct {
 	mutex               *sync.RWMutex
 }
 
-func NewAccountManager(db *sql.DB, alerter alert.Alerter) AccountManager {
-	return AccountManager{
+func NewAccountManager(db *sql.DB, alerter alert.Alerter) *AccountManager {
+	return &AccountManager{
 		idAccounts:          make(map[int64]*Account),
 		chainInfoIdAccounts: make(map[int64]*Account),
 		db:                  db,

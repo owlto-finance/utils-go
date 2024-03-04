@@ -77,8 +77,8 @@ func (mgr *AccountManager) LoadAllAccounts() {
 	mgr.idAccounts = idAccounts
 	mgr.chainInfoIdAccounts = chainInfoIdAccounts
 	mgr.mutex.Unlock()
-
 	log.Println("load all chain info: ", counter)
+
 	// Check for errors from iterating over rows
 	if err := rows.Err(); err != nil {
 		mgr.alerter.AlertText("get next t_account row error", err)

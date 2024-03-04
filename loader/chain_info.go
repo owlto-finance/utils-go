@@ -98,8 +98,8 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 	mgr.chainIdChains = chainIdChains
 	mgr.nameChains = nameChains
 	mgr.mutex.Unlock()
-
 	log.Println("load all chain info: ", counter)
+
 	// Check for errors from iterating over rows
 	if err := rows.Err(); err != nil {
 		mgr.alerter.AlertText("get next t_chain_info row error", err)

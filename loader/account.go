@@ -59,8 +59,8 @@ func (mgr *AccountManager) LoadAllAccounts() {
 
 	idAccounts := make(map[int64]*Account)
 	chainInfoIdAccounts := make(map[int64]*Account)
-
 	counter := 0
+
 	// Iterate over the result set
 	for rows.Next() {
 		var acc Account

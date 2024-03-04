@@ -68,11 +68,12 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 	}
 
 	defer rows.Close()
+
 	idChains := make(map[int64]*ChainInfo)
 	chainIdChains := make(map[string]*ChainInfo)
 	nameChains := make(map[string]*ChainInfo)
-
 	counter := 0
+
 	// Iterate over the result set
 	for rows.Next() {
 		var chain ChainInfo

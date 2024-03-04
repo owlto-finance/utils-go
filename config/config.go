@@ -52,6 +52,7 @@ import (
 
 // WriteConfigFile renders config using the template and writes it to configFilePath.
 func WriteConfigFile(configFilePath string, config interface{}) error {
+	configFilePath = strings.TrimSpace(configFilePath)
 	fileType := strings.TrimPrefix(filepath.Ext(configFilePath), ".")
 
 	configMap := make(map[string]interface{})
@@ -83,6 +84,7 @@ func WriteConfigFile(configFilePath string, config interface{}) error {
 }
 
 func GetConfig(configFilePath string, defaultConfig interface{}) error {
+	configFilePath = strings.TrimSpace(configFilePath)
 	filename := filepath.Base(configFilePath)
 	fileType := strings.TrimPrefix(filepath.Ext(configFilePath), ".")
 	v := viper.New()

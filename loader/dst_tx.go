@@ -2,6 +2,7 @@ package loader
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/owlto-finance/utils-go/alert"
 )
@@ -71,6 +72,12 @@ func (mgr *DstTxManager) GetDstTxConfirmGen(srcId int64, action string, version 
 }
 
 func (mgr *DstTxManager) Save(tx *DstTx) error {
+	tx.SrcAction = strings.TrimSpace(tx.SrcAction)
+	tx.FeeCap.String = strings.TrimSpace(tx.FeeCap.String)
+	tx.TransferToken.String = strings.TrimSpace(tx.TransferToken.String)
+	tx.TransferRecipient.String = strings.TrimSpace(tx.TransferRecipient.String)
+	tx.TransferAmount.String = strings.TrimSpace(tx.TransferAmount.String)
+
 	query := `INSERT IGNORE INTO t_dst_transaction (src_action, src_id, src_version, sender, body, fee_cap, transfer_token, transfer_recipient, transfer_amount)
               VALUES (?, ?, ?, ?, ?, ?, ? , ?, ?)`
 

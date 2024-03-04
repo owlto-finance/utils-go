@@ -3,6 +3,7 @@ package loader
 import (
 	"database/sql"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/owlto-finance/utils-go/alert"
@@ -41,7 +42,7 @@ func (mgr *AccountManager) GetAccountById(id int64) (*Account, bool) {
 
 func (mgr *AccountManager) HasAddress(address string) bool {
 	mgr.mutex.RLock()
-	_, ok := mgr.addressCidAccounts[address]
+	_, ok := mgr.addressCidAccounts[strings.ToLower(strings.TrimSpace(address))]
 	mgr.mutex.RUnlock()
 	return ok
 }
@@ -49,7 +50,7 @@ func (mgr *AccountManager) HasAddress(address string) bool {
 func (mgr *AccountManager) GetAccountByAddressCid(address string, cid int64) (*Account, bool) {
 	mgr.mutex.RLock()
 	defer mgr.mutex.RUnlock()
-	accs, ok := mgr.addressCidAccounts[address]
+	accs, ok := mgr.addressCidAccounts[strings.ToLower(strings.TrimSpace(address))]
 	if ok {
 		acc, ok := accs[cid]
 		return acc, ok
@@ -78,11 +79,14 @@ func (mgr *AccountManager) LoadAllAccounts() {
 		if err := rows.Scan(&acc.Id, &acc.ChainInfoId, &acc.Address); err != nil {
 			mgr.alerter.AlertText("scan t_account row error", err)
 		} else {
+			acc.Address = strings.TrimSpace(acc.Address)
+
 			idAccounts[acc.Id] = &acc
-			accs, ok := addressCidAccounts[acc.Address]
+			lowerAddr := strings.ToLower(acc.Address)
+			accs, ok := addressCidAccounts[lowerAddr]
 			if !ok {
 				accs = make(map[int64]*Account)
-				addressCidAccounts[acc.Address] = accs
+				addressCidAccounts[lowerAddr] = accs
 			}
 			accs[acc.ChainInfoId] = &acc
 			counter++

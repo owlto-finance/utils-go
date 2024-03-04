@@ -3,6 +3,7 @@ package alert
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/owlto-finance/utils-go/network"
 )
@@ -16,7 +17,7 @@ type LarkAlerter struct {
 
 func NewLarkAlerter(webhook string) *LarkAlerter {
 	return &LarkAlerter{
-		webhook: webhook,
+		webhook: strings.TrimSpace(webhook),
 	}
 }
 

@@ -73,6 +73,7 @@ func (mgr *DstTxManager) GetDstTxConfirmGen(srcId int64, action string, version 
 
 func (mgr *DstTxManager) Save(tx *DstTx) error {
 	tx.SrcAction = strings.TrimSpace(tx.SrcAction)
+	tx.Body = strings.TrimSpace(tx.Body)
 	tx.FeeCap.String = strings.TrimSpace(tx.FeeCap.String)
 	tx.TransferToken.String = strings.TrimSpace(tx.TransferToken.String)
 	tx.TransferRecipient.String = strings.TrimSpace(tx.TransferRecipient.String)

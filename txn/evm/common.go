@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -13,6 +14,8 @@ import (
 )
 
 func EstimateGas(client *ethclient.Client, from string, to string, value *big.Int, data []byte) (uint64, error) {
+	from = strings.TrimSpace(from)
+	to = strings.TrimSpace(to)
 
 	f := common.HexToAddress(from)
 	t := common.HexToAddress(to)
@@ -33,6 +36,7 @@ func EstimateGas(client *ethclient.Client, from string, to string, value *big.In
 }
 
 func ToBody(to string, value *big.Int, input []byte, gas uint64) ([]byte, error) {
+	to = strings.TrimSpace(to)
 	t := common.HexToAddress(to)
 	v := value
 	if v == nil {

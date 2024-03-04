@@ -2,6 +2,7 @@ package evm
 
 import (
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -9,6 +10,9 @@ import (
 )
 
 func Erc20ApproveBody(client *ethclient.Client, senderAddr string, tokenAddr string, spender string, amount *big.Int) ([]byte, error) {
+	senderAddr = strings.TrimSpace(senderAddr)
+	tokenAddr = strings.TrimSpace(tokenAddr)
+	spender = strings.TrimSpace(spender)
 
 	abi, err := erc20.Erc20MetaData.GetAbi()
 	if err != nil {

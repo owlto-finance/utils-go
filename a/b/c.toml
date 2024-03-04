@@ -1,9 +1,0 @@
-api_server_listen = ":9090"
-db_backend = "mysql"
-db_dsn = "usbase"
-is_testnet = true
-kms_api_key = "api_key"
-kms_url = "ht.example.com"
-
-[telemetry]
-  num = [3]

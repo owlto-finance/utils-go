@@ -60,7 +60,7 @@ func WriteConfigFile(configFilePath string, config interface{}) error {
 		return fmt.Errorf("error decoding struct to map: %w", err)
 
 	}
-	err := system.MakedirAll(filepath.Dir(configFilePath))
+	err := system.MakeDirAll(filepath.Dir(configFilePath))
 	if err != nil {
 		return err
 	}

@@ -6,18 +6,25 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/NethermindEth/starknet.go/rpc"
 	"github.com/ethereum/go-ethereum/ethclient"
+	ethrpc "github.com/ethereum/go-ethereum/rpc"
 	"github.com/owlto-finance/utils-go/alert"
 )
 
 type ChainInfo struct {
-	Id          int64
-	ChainId     string
-	Name        string
-	IsTestnet   int8
-	RpcEndPoint string
-	Disabled    int8
-	Client      *ethclient.Client
+	Id            int64
+	ChainId       string
+	RealChainId   string
+	Name          string
+	Backend       int32
+	Eip1559       int8
+	NetworkCode   int32
+	BlockInterval int32
+	RpcEndPoint   string
+	Disabled      int8
+	IsTestnet     int8
+	Client        interface{}
 }
 
 type ChainInfoManager struct {
@@ -61,7 +68,7 @@ func (mgr *ChainInfoManager) GetChainInfoByName(name string) (*ChainInfo, bool) 
 
 func (mgr *ChainInfoManager) LoadAllChains() {
 	// Query the database to select only id and name fields
-	rows, err := mgr.db.Query("SELECT id, chainid, name, is_testnet,rpc_end_point, disabled FROM t_chain_info")
+	rows, err := mgr.db.Query("SELECT id, chainid, real_chainid, name, backend, eip1559, network_code, block_interval, rpc_end_point, disabled, is_testnet FROM t_chain_info")
 
 	if err != nil || rows == nil {
 		mgr.alerter.AlertText("select t_chain_info error", err)
@@ -79,17 +86,28 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 	for rows.Next() {
 		var chain ChainInfo
 
-		if err := rows.Scan(&chain.Id, &chain.ChainId, &chain.Name, &chain.IsTestnet, &chain.RpcEndPoint, &chain.Disabled); err != nil {
+		if err := rows.Scan(&chain.Id, &chain.ChainId, &chain.RealChainId, &chain.Name, &chain.Backend, &chain.Eip1559,
+			&chain.NetworkCode, &chain.BlockInterval, &chain.RpcEndPoint, &chain.Disabled, &chain.IsTestnet); err != nil {
 			mgr.alerter.AlertText("scan t_chain_info row error", err)
 		} else {
 			chain.ChainId = strings.TrimSpace(chain.ChainId)
 			chain.Name = strings.TrimSpace(chain.Name)
 
-			chain.Client, err = ethclient.Dial(chain.RpcEndPoint)
-			if err != nil {
-				mgr.alerter.AlertText("create client error", err)
-				continue
+			if chain.Backend == 1 {
+				chain.Client, err = ethclient.Dial(chain.RpcEndPoint)
+				if err != nil {
+					mgr.alerter.AlertText("create evm client error", err)
+					continue
+				}
+			} else if chain.Backend == 2 {
+				erpc, err := ethrpc.Dial(chain.RpcEndPoint)
+				if err != nil {
+					mgr.alerter.AlertText("create starknet client error", err)
+					continue
+				}
+				chain.Client = rpc.NewProvider(erpc)
 			}
+
 			idChains[chain.Id] = &chain
 			chainIdChains[strings.ToLower(chain.ChainId)] = &chain
 			nameChains[strings.ToLower(chain.Name)] = &chain

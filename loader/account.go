@@ -93,16 +93,16 @@ func (mgr *AccountManager) LoadAllAccounts() {
 		}
 	}
 
-	mgr.mutex.Lock()
-	mgr.idAccounts = idAccounts
-	mgr.addressCidAccounts = addressCidAccounts
-	mgr.mutex.Unlock()
-	log.Println("load all account: ", counter)
-
 	// Check for errors from iterating over rows
 	if err := rows.Err(); err != nil {
 		mgr.alerter.AlertText("get next t_account row error", err)
 		return
 	}
+
+	mgr.mutex.Lock()
+	mgr.idAccounts = idAccounts
+	mgr.addressCidAccounts = addressCidAccounts
+	mgr.mutex.Unlock()
+	log.Println("load all account: ", counter)
 
 }

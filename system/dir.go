@@ -4,7 +4,7 @@ import (
 	"os"
 )
 
-func MakedirAll(home string) error {
+func MakeDirAll(home string) error {
 	_, err := os.Stat(home)
 	if err == nil {
 		return nil

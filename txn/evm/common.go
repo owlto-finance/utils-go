@@ -46,7 +46,10 @@ func ToBody(to string, value *big.Int, input []byte, gas uint64) ([]byte, error)
 		"to":    t.Hex(),
 		"gas":   fmt.Sprintf("0x%x", gas),
 		"value": fmt.Sprintf("0x%x", v),
-		"input": fmt.Sprintf("0x%s", hex.EncodeToString(input)),
+	}
+
+	if input != nil {
+		m["input"] = fmt.Sprintf("0x%s", hex.EncodeToString(input))
 	}
 
 	// Marshal the map to a JSON string

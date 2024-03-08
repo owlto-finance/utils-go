@@ -52,7 +52,7 @@ func (mgr *SrcTxManager) Save(tx *SrcTx) error {
 	tx.TargetAddress.String = strings.TrimSpace(tx.TargetAddress.String)
 
 	query := `INSERT IGNORE INTO t_src_transaction (chainid, tx_hash, sender, receiver, target_address, token, value, dst_chainid, is_testnet, tx_timestamp, src_token_name, src_token_decimal, is_cctp)
-              VALUES (?, ?, ?, ?, ?, ?, ? , ?, ?)`
+              VALUES (?, ?, ?, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?)`
 
 	// Execute the SQL statement with tx data
 	_, err := mgr.db.Exec(query, tx.ChainId, tx.TxHash, tx.Sender, tx.Receiver, tx.TargetAddress, tx.Token, tx.Value, tx.DstChainid, tx.IsTestnet, tx.TxTimestamp, tx.SrcTokenName, tx.SrcTokenDecimal, tx.IsCctp)

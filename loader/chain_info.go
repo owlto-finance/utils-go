@@ -63,6 +63,7 @@ func NewChainInfoManager(db *sql.DB, alerter alert.Alerter) *ChainInfoManager {
 func (mgr *ChainInfoManager) GetChainInfoIds() []int64 {
 	mgr.mutex.RLock()
 	ids := make([]int64, 0, len(mgr.idChains))
+
 	for id := range mgr.idChains {
 		ids = append(ids, id)
 	}

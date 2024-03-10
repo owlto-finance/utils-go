@@ -23,6 +23,9 @@ func EstimateGas(client *ethclient.Client, from string, to string, value *big.In
 	if v == nil {
 		v = big.NewInt(0)
 	}
+	if data == nil {
+		data = []byte{}
+	}
 	cm := ethereum.CallMsg{
 		From:  f,
 		To:    &t,

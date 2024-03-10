@@ -3,6 +3,7 @@ package loader
 import (
 	"database/sql"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -27,13 +28,25 @@ type ChainInfo struct {
 	Client        interface{}
 }
 
+func (ci *ChainInfo) GetInt32ChainId() int32 {
+	chainid, _ := strconv.ParseInt(ci.ChainId, 10, 32)
+	return int32(chainid)
+}
+
+func (ci *ChainInfo) GetInt64ChainId() int64 {
+	chainid, _ := strconv.ParseInt(ci.ChainId, 10, 64)
+	return chainid
+}
+
 type ChainInfoManager struct {
 	idChains      map[int64]*ChainInfo
 	chainIdChains map[string]*ChainInfo
 	nameChains    map[string]*ChainInfo
-	db            *sql.DB
-	alerter       alert.Alerter
-	mutex         *sync.RWMutex
+	netcodeChains map[int32]*ChainInfo
+
+	db      *sql.DB
+	alerter alert.Alerter
+	mutex   *sync.RWMutex
 }
 
 func NewChainInfoManager(db *sql.DB, alerter alert.Alerter) *ChainInfoManager {
@@ -47,11 +60,27 @@ func NewChainInfoManager(db *sql.DB, alerter alert.Alerter) *ChainInfoManager {
 	}
 }
 
+func (mgr *ChainInfoManager) GetChainInfoIds() []int64 {
+	mgr.mutex.RLock()
+	ids := make([]int64, 0, len(mgr.idChains))
+	for id := range mgr.idChains {
+		ids = append(ids, id)
+	}
+	mgr.mutex.RUnlock()
+	return ids
+}
+
 func (mgr *ChainInfoManager) GetChainInfoById(id int64) (*ChainInfo, bool) {
 	mgr.mutex.RLock()
 	chain, ok := mgr.idChains[id]
 	mgr.mutex.RUnlock()
 	return chain, ok
+}
+func (mgr *ChainInfoManager) GetChainInfoByInt32ChainId(chainId int32) (*ChainInfo, bool) {
+	return mgr.GetChainInfoByChainId(strconv.FormatInt(int64(chainId), 10))
+}
+func (mgr *ChainInfoManager) GetChainInfoByInt64ChainId(chainId int64) (*ChainInfo, bool) {
+	return mgr.GetChainInfoByChainId(strconv.FormatInt(chainId, 10))
 }
 func (mgr *ChainInfoManager) GetChainInfoByChainId(chainId string) (*ChainInfo, bool) {
 	mgr.mutex.RLock()
@@ -62,6 +91,12 @@ func (mgr *ChainInfoManager) GetChainInfoByChainId(chainId string) (*ChainInfo, 
 func (mgr *ChainInfoManager) GetChainInfoByName(name string) (*ChainInfo, bool) {
 	mgr.mutex.RLock()
 	chain, ok := mgr.nameChains[strings.ToLower(strings.TrimSpace(name))]
+	mgr.mutex.RUnlock()
+	return chain, ok
+}
+func (mgr *ChainInfoManager) GetChainInfoByNetcode(netcode int32) (*ChainInfo, bool) {
+	mgr.mutex.RLock()
+	chain, ok := mgr.netcodeChains[netcode]
 	mgr.mutex.RUnlock()
 	return chain, ok
 }
@@ -78,8 +113,10 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 	defer rows.Close()
 
 	idChains := make(map[int64]*ChainInfo)
+	netcodeChains := make(map[int32]*ChainInfo)
 	chainIdChains := make(map[string]*ChainInfo)
 	nameChains := make(map[string]*ChainInfo)
+
 	counter := 0
 
 	// Iterate over the result set
@@ -111,6 +148,7 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 			idChains[chain.Id] = &chain
 			chainIdChains[strings.ToLower(chain.ChainId)] = &chain
 			nameChains[strings.ToLower(chain.Name)] = &chain
+			netcodeChains[chain.NetworkCode] = &chain
 			counter++
 		}
 	}

@@ -18,6 +18,11 @@ type CircleCctpChain struct {
 	MessageTransmitter string
 }
 
+func (ccc *CircleCctpChain) GetMinValueUnit() *big.Int {
+	result := new(big.Int).Mul(ccc.MinValue, big.NewInt(1000000))
+	return result
+}
+
 type CircleCctpChainManager struct {
 	chainIdChains map[int32]*CircleCctpChain
 	db            *sql.DB
@@ -34,7 +39,7 @@ func NewCircleCctpChainManager(db *sql.DB, alerter alert.Alerter) *CircleCctpCha
 	}
 }
 
-func (mgr *CircleCctpChainManager) GetDtc(srcChainId int32, dstChainId int32) *big.Int {
+func (mgr *CircleCctpChainManager) GetDtcUnit(srcChainId int32, dstChainId int32) *big.Int {
 	if srcChainId == 1 || dstChainId == 1 {
 		return big.NewInt(50000000)
 	}

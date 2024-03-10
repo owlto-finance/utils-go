@@ -14,18 +14,21 @@ import (
 )
 
 type ChainInfo struct {
-	Id            int64
-	ChainId       string
-	RealChainId   string
-	Name          string
-	Backend       int32
-	Eip1559       int8
-	NetworkCode   int32
-	BlockInterval int32
-	RpcEndPoint   string
-	Disabled      int8
-	IsTestnet     int8
-	Client        interface{}
+	Id                      int64
+	ChainId                 string
+	RealChainId             string
+	Name                    string
+	Backend                 int32
+	Eip1559                 int8
+	NetworkCode             int32
+	BlockInterval           int32
+	RpcEndPoint             string
+	Disabled                int8
+	IsTestnet               int8
+	GasTokenName            string
+	GasTokenDecimal         int32
+	TransferContractAddress sql.NullString
+	Client                  interface{}
 }
 
 func (ci *ChainInfo) GetInt32ChainId() int32 {
@@ -104,7 +107,7 @@ func (mgr *ChainInfoManager) GetChainInfoByNetcode(netcode int32) (*ChainInfo, b
 
 func (mgr *ChainInfoManager) LoadAllChains() {
 	// Query the database to select only id and name fields
-	rows, err := mgr.db.Query("SELECT id, chainid, real_chainid, name, backend, eip1559, network_code, block_interval, rpc_end_point, disabled, is_testnet FROM t_chain_info")
+	rows, err := mgr.db.Query("SELECT id, chainid, real_chainid, name, backend, eip1559, network_code, block_interval, rpc_end_point, disabled, is_testnet, gas_token_name, gas_token_decimal, transfer_contract_address FROM t_chain_info")
 
 	if err != nil || rows == nil {
 		mgr.alerter.AlertText("select t_chain_info error", err)
@@ -125,7 +128,8 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 		var chain ChainInfo
 
 		if err := rows.Scan(&chain.Id, &chain.ChainId, &chain.RealChainId, &chain.Name, &chain.Backend, &chain.Eip1559,
-			&chain.NetworkCode, &chain.BlockInterval, &chain.RpcEndPoint, &chain.Disabled, &chain.IsTestnet); err != nil {
+			&chain.NetworkCode, &chain.BlockInterval, &chain.RpcEndPoint, &chain.Disabled, &chain.IsTestnet,
+			&chain.GasTokenName, &chain.GasTokenDecimal, &chain.TransferContractAddress); err != nil {
 			mgr.alerter.AlertText("scan t_chain_info row error", err)
 		} else {
 			chain.ChainId = strings.TrimSpace(chain.ChainId)

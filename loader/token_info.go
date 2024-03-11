@@ -3,6 +3,7 @@ package loader
 import (
 	"database/sql"
 	"log"
+	"strings"
 	"sync"
 
 	"github.com/owlto-finance/utils-go/alert"

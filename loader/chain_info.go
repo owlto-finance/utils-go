@@ -57,6 +57,7 @@ func NewChainInfoManager(db *sql.DB, alerter alert.Alerter) *ChainInfoManager {
 		idChains:      make(map[int64]*ChainInfo),
 		chainIdChains: make(map[string]*ChainInfo),
 		nameChains:    make(map[string]*ChainInfo),
+		netcodeChains: make(map[int32]*ChainInfo),
 		db:            db,
 		alerter:       alerter,
 		mutex:         &sync.RWMutex{},
@@ -172,6 +173,7 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 	mgr.idChains = idChains
 	mgr.chainIdChains = chainIdChains
 	mgr.nameChains = nameChains
+	mgr.netcodeChains = netcodeChains
 	mgr.mutex.Unlock()
 	log.Println("load all chain info: ", counter)
 

@@ -133,7 +133,11 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 			mgr.alerter.AlertText("scan t_chain_info row error", err)
 		} else {
 			chain.ChainId = strings.TrimSpace(chain.ChainId)
+			chain.RealChainId = strings.TrimSpace(chain.RealChainId)
 			chain.Name = strings.TrimSpace(chain.Name)
+			chain.RpcEndPoint = strings.TrimSpace(chain.RpcEndPoint)
+			chain.GasTokenName = strings.TrimSpace(chain.GasTokenName)
+			chain.TransferContractAddress.String = strings.TrimSpace(chain.TransferContractAddress.String)
 
 			if chain.Backend == 1 {
 				chain.Client, err = ethclient.Dial(chain.RpcEndPoint)

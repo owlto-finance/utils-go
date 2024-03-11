@@ -36,9 +36,9 @@ func NewTokenInfoManager(db *sql.DB, alerter alert.Alerter) *TokenInfoManager {
 func (mgr *TokenInfoManager) GetByChainNameTokenAddr(chainName string, tokenAddr string) (*TokenInfo, bool) {
 	mgr.mutex.RLock()
 	defer mgr.mutex.RUnlock()
-	tokenAddrs, ok := mgr.chainNameTokenAddrs[chainName]
+	tokenAddrs, ok := mgr.chainNameTokenAddrs[strings.ToLower(strings.TrimSpace(chainName))]
 	if ok {
-		token, ok := tokenAddrs[tokenAddr]
+		token, ok := tokenAddrs[strings.ToLower(strings.TrimSpace(tokenAddr))]
 		return token, ok
 	}
 	return nil, false
@@ -65,12 +65,16 @@ func (mgr *TokenInfoManager) LoadAllToken() {
 		if err := rows.Scan(&token.TokenName, &token.ChainName, &token.TokenAddress, &token.Decimals); err != nil {
 			mgr.alerter.AlertText("scan t_token_info row error", err)
 		} else {
-			tokenAddrs, ok := chainNameTokenAddrs[token.ChainName]
+			token.ChainName = strings.TrimSpace(token.ChainName)
+			token.TokenAddress = strings.TrimSpace(token.TokenAddress)
+			token.TokenName = strings.TrimSpace(token.TokenName)
+
+			tokenAddrs, ok := chainNameTokenAddrs[strings.ToLower(token.ChainName)]
 			if !ok {
 				tokenAddrs = make(map[string]*TokenInfo)
-				chainNameTokenAddrs[token.ChainName] = tokenAddrs
+				chainNameTokenAddrs[strings.ToLower(token.ChainName)] = tokenAddrs
 			}
-			tokenAddrs[token.TokenAddress] = &token
+			tokenAddrs[strings.ToLower(token.TokenAddress)] = &token
 
 			counter++
 		}

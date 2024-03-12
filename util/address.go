@@ -49,8 +49,10 @@ func GetChecksumAddress64(address string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	hs := strings.TrimPrefix(h.String(), "0x")
-	fmt.Println("1", hs)
+	hs := strings.TrimLeft(strings.TrimPrefix(h.String(), "0x"), "0")
+	if len(hs) > 64 {
+		return "", errors.New("hs too long")
+	}
 	hashed, err := hex.DecodeString(strings.Repeat("0", 64-len(hs)) + hs)
 	if err != nil {
 		return "", err

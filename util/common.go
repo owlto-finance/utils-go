@@ -1,8 +1,10 @@
 package util
 
+import "math/big"
+
 func IsHexStringZero(hexString string) bool {
 	// Remove "0x" prefix if it exists
-	if len(hexString) > 2 && hexString[:2] == "0x" {
+	if len(hexString) > 2 && (hexString[:2] == "0x" || hexString[:2] == "0X") {
 		hexString = hexString[2:]
 	}
 
@@ -13,4 +15,21 @@ func IsHexStringZero(hexString string) bool {
 		}
 	}
 	return true
+}
+
+func GetJsonBigInt(itf interface{}) *big.Int {
+	switch itf := itf.(type) {
+	case float64:
+		return big.NewInt(int64(itf))
+	case string:
+		bi := new(big.Int)
+		bi, success := bi.SetString((itf), 0)
+		if success {
+			return bi
+		} else {
+			return new(big.Int)
+		}
+	default:
+		return new(big.Int)
+	}
 }

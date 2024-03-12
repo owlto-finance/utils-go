@@ -11,8 +11,9 @@ import (
 )
 
 func GetChecksumAddress(address string) (string, error) {
+	address = strings.TrimSpace(address)
 	prefixLen := 0
-	if strings.HasPrefix(address, "0x") {
+	if strings.HasPrefix(address, "0x") || strings.HasPrefix(address, "0X") {
 		prefixLen = 2
 	}
 	if len(address)-prefixLen == 40 {
@@ -25,10 +26,12 @@ func GetChecksumAddress(address string) (string, error) {
 }
 
 func GetChecksumAddress40(address string) (string, error) {
+	address = strings.TrimSpace(address)
 	return common.HexToAddress(address).Hex(), nil
 }
 
 func GetChecksumAddress64(address string) (string, error) {
+	address = strings.TrimSpace(address)
 	address = strings.TrimLeft(strings.TrimPrefix(strings.ToLower(address), "0x"), "0")
 	if len(address)%2 != 0 {
 		address = "0" + address

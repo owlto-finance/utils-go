@@ -25,7 +25,7 @@ func (alerter *LarkAlerter) AlertText(msg string, err error) {
 	data := map[string]interface{}{
 		"msg_type": "text",
 		"content": map[string]interface{}{
-			"text": fmt.Sprintf("%s : %s", msg, err),
+			"text": fmt.Sprintf("%s : %v", msg, err),
 		},
 	}
 	network.Request(alerter.webhook, data, nil)

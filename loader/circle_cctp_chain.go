@@ -93,6 +93,7 @@ func (mgr *CircleCctpChainManager) LoadAllChains() {
 			_, ok := new(big.Int).SetString(chain.MinValue, 0)
 			if !ok {
 				mgr.alerter.AlertText("scan t_cctp_support_chain min value error ", fmt.Errorf("id: %d, min value: %s", chain.ChainId, chain.MinValue))
+				continue
 			}
 
 			chainIdChains[chain.ChainId] = &chain

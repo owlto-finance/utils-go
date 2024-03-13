@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"strings"
 	"sync"
 
 	"github.com/owlto-finance/utils-go/alert"
@@ -12,14 +13,15 @@ import (
 
 type CircleCctpChain struct {
 	ChainId            int32
-	MinValue           *big.Int
+	MinValue           string
 	Domain             int32
 	TokenMessenger     string
 	MessageTransmitter string
 }
 
 func (ccc *CircleCctpChain) GetMinValueUnit() *big.Int {
-	result := new(big.Int).Mul(ccc.MinValue, big.NewInt(1000000))
+	min, _ := new(big.Int).SetString(ccc.MinValue, 0)
+	result := new(big.Int).Mul(min, big.NewInt(1000000))
 	return result
 }
 
@@ -82,15 +84,15 @@ func (mgr *CircleCctpChainManager) LoadAllChains() {
 	// Iterate over the result set
 	for rows.Next() {
 		var chain CircleCctpChain
-		var minValue string
-		if err := rows.Scan(&chain.ChainId, &minValue, &chain.Domain, &chain.TokenMessenger, &chain.MessageTransmitter); err != nil {
+		if err := rows.Scan(&chain.ChainId, &chain.MinValue, &chain.Domain, &chain.TokenMessenger, &chain.MessageTransmitter); err != nil {
 			mgr.alerter.AlertText("scan t_cctp_support_chain row error", err)
 		} else {
-
-			chain.MinValue = big.NewInt(0)
-			_, ok := chain.MinValue.SetString(minValue, 10)
+			chain.MessageTransmitter = strings.TrimSpace(chain.MessageTransmitter)
+			chain.TokenMessenger = strings.TrimSpace(chain.TokenMessenger)
+			chain.MinValue = strings.TrimSpace(chain.MinValue)
+			_, ok := new(big.Int).SetString(chain.MinValue, 0)
 			if !ok {
-				mgr.alerter.AlertText("scan t_cctp_support_chain min value error ", fmt.Errorf("id: %d, min value: %s", chain.ChainId, minValue))
+				mgr.alerter.AlertText("scan t_cctp_support_chain min value error ", fmt.Errorf("id: %d, min value: %s", chain.ChainId, chain.MinValue))
 			}
 
 			chainIdChains[chain.ChainId] = &chain

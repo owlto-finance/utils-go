@@ -53,18 +53,19 @@ func (mgr *DstTxManager) GetDoneTxGen(genId int64) *TxGen {
 	if err != nil {
 		return nil
 	}
+	gen.Hash = strings.TrimSpace(gen.Hash)
 	return &gen
 }
 
 func (mgr *DstTxManager) IsDstTxExist(srcId int64, action string, version int32) bool {
 	var id int64
-	err := mgr.db.QueryRow("SELECT id FROM t_dst_transaction where src_action = ? and src_id = ? and src_version = ?", action, srcId, version).Scan(&id)
+	err := mgr.db.QueryRow("SELECT id FROM t_dst_transaction where src_action = ? and src_id = ? and src_version = ?", strings.TrimSpace(action), srcId, version).Scan(&id)
 	return err == nil
 }
 
 func (mgr *DstTxManager) GetDstTxConfirmGen(srcId int64, action string, version int32) int64 {
 	var genId int64 = 0
-	err := mgr.db.QueryRow("SELECT confirmed_gen FROM t_dst_transaction where src_action = ? and src_id = ? and src_version = ? and confirmed_gen is not null", action, srcId, version).Scan(&genId)
+	err := mgr.db.QueryRow("SELECT confirmed_gen FROM t_dst_transaction where src_action = ? and src_id = ? and src_version = ? and confirmed_gen is not null", strings.TrimSpace(action), srcId, version).Scan(&genId)
 	if err != nil {
 		return 0
 	}

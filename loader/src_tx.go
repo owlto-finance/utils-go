@@ -39,7 +39,7 @@ func NewSrcTxManager(db *sql.DB, alerter alert.Alerter) *SrcTxManager {
 
 func (mgr *SrcTxManager) IsSrcTxExist(chainId int32, txHash string) bool {
 	var id int64
-	err := mgr.db.QueryRow("SELECT id FROM t_src_transaction where chainid = ? and tx_hash = ? ", chainId, txHash).Scan(&id)
+	err := mgr.db.QueryRow("SELECT id FROM t_src_transaction where chainid = ? and tx_hash = ? ", chainId, strings.TrimSpace(txHash)).Scan(&id)
 	return err == nil
 }
 
@@ -50,6 +50,7 @@ func (mgr *SrcTxManager) Save(tx *SrcTx) error {
 	tx.Token = strings.TrimSpace(tx.Token)
 	tx.Value = strings.TrimSpace(tx.Value)
 	tx.TargetAddress.String = strings.TrimSpace(tx.TargetAddress.String)
+	tx.SrcTokenName.String = strings.TrimSpace(tx.SrcTokenName.String)
 
 	query := `INSERT IGNORE INTO t_src_transaction (chainid, tx_hash, sender, receiver, target_address, token, value, dst_chainid, is_testnet, tx_timestamp, src_token_name, src_token_decimal, is_cctp)
               VALUES (?, ?, ?, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?)`

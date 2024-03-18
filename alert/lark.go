@@ -19,7 +19,7 @@ type LarkAlerter struct {
 func NewLarkAlerter(webhook string) *LarkAlerter {
 	return &LarkAlerter{
 		webhook:       strings.TrimSpace(webhook),
-		CommonAlerter: NewCommonAlerter(180, 900),
+		CommonAlerter: NewCommonAlerter(150, 900),
 	}
 }
 

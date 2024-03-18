@@ -13,12 +13,20 @@ import (
 	"github.com/owlto-finance/utils-go/alert"
 )
 
+type ChainType int32
+
+const (
+	Ethereum ChainType = iota + 1
+	Starknet
+	Solana
+)
+
 type ChainInfo struct {
 	Id                      int64
 	ChainId                 string
 	RealChainId             string
 	Name                    string
-	Backend                 int32
+	Backend                 ChainType
 	Eip1559                 int8
 	NetworkCode             int32
 	BlockInterval           int32
@@ -140,13 +148,13 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 			chain.GasTokenName = strings.TrimSpace(chain.GasTokenName)
 			chain.TransferContractAddress.String = strings.TrimSpace(chain.TransferContractAddress.String)
 
-			if chain.Backend == 1 {
+			if chain.Backend == Ethereum {
 				chain.Client, err = ethclient.Dial(chain.RpcEndPoint)
 				if err != nil {
 					mgr.alerter.AlertText("create evm client error", err)
 					continue
 				}
-			} else if chain.Backend == 2 {
+			} else if chain.Backend == Starknet {
 				erpc, err := ethrpc.Dial(chain.RpcEndPoint)
 				if err != nil {
 					mgr.alerter.AlertText("create starknet client error", err)

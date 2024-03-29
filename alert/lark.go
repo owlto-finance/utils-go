@@ -8,8 +8,7 @@ import (
 	"github.com/owlto-finance/utils-go/network"
 )
 
-// alerter := alert.NewLarkAlerter("https://open.larksuite.com/open-apis/bot/v2/hook/29507972-0dde-4a03-971a-acd012d1d888")
-// alerter.AlertText("fuck", errors.New("shit"))
+// alerter := alert.NewLarkAlerter("https://open.larksuite.com/open-apis/bot/v2/hook/xxxx")
 
 type LarkAlerter struct {
 	*CommonAlerter

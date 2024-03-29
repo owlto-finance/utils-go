@@ -10,6 +10,7 @@ import (
 	"github.com/NethermindEth/starknet.go/rpc"
 	"github.com/ethereum/go-ethereum/ethclient"
 	ethrpc "github.com/ethereum/go-ethereum/rpc"
+	solrpc "github.com/gagliardetto/solana-go/rpc"
 	"github.com/owlto-finance/utils-go/alert"
 )
 
@@ -162,6 +163,7 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 				}
 				chain.Client = rpc.NewProvider(erpc)
 			} else if chain.Backend == SolanaBackend {
+				chain.Client = solrpc.New(chain.RpcEndPoint)
 			}
 
 			idChains[chain.Id] = &chain

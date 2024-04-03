@@ -18,6 +18,7 @@ type Account struct {
 type AccountManager struct {
 	idAccounts         map[int64]*Account
 	addressCidAccounts map[string]map[int64]*Account
+	cidAddressAccounts map[int64]map[string]*Account
 	db                 *sql.DB
 	alerter            alert.Alerter
 	mutex              *sync.RWMutex
@@ -27,6 +28,7 @@ func NewAccountManager(db *sql.DB, alerter alert.Alerter) *AccountManager {
 	return &AccountManager{
 		idAccounts:         make(map[int64]*Account),
 		addressCidAccounts: make(map[string]map[int64]*Account),
+		cidAddressAccounts: make(map[int64]map[string]*Account),
 		db:                 db,
 		alerter:            alerter,
 		mutex:              &sync.RWMutex{},
@@ -45,6 +47,19 @@ func (mgr *AccountManager) HasAddress(address string) bool {
 	_, ok := mgr.addressCidAccounts[strings.ToLower(strings.TrimSpace(address))]
 	mgr.mutex.RUnlock()
 	return ok
+}
+
+func (mgr *AccountManager) GetAddresses(cid int64) []string {
+	addrs := make([]string, 0)
+	mgr.mutex.RLock()
+	accs, ok := mgr.cidAddressAccounts[cid]
+	if ok {
+		for _, acc := range accs {
+			addrs = append(addrs, acc.Address)
+		}
+	}
+	mgr.mutex.RUnlock()
+	return addrs
 }
 
 func (mgr *AccountManager) GetAccountByAddressCid(address string, cid int64) (*Account, bool) {
@@ -71,6 +86,7 @@ func (mgr *AccountManager) LoadAllAccounts() {
 
 	idAccounts := make(map[int64]*Account)
 	addressCidAccounts := make(map[string]map[int64]*Account)
+	cidAddressAccounts := make(map[int64]map[string]*Account)
 	counter := 0
 
 	// Iterate over the result set
@@ -83,12 +99,21 @@ func (mgr *AccountManager) LoadAllAccounts() {
 
 			idAccounts[acc.Id] = &acc
 			lowerAddr := strings.ToLower(acc.Address)
+
 			accs, ok := addressCidAccounts[lowerAddr]
 			if !ok {
 				accs = make(map[int64]*Account)
 				addressCidAccounts[lowerAddr] = accs
 			}
 			accs[acc.ChainInfoId] = &acc
+
+			addraccs, ok := cidAddressAccounts[acc.ChainInfoId]
+			if !ok {
+				addraccs = make(map[string]*Account)
+				cidAddressAccounts[acc.ChainInfoId] = addraccs
+			}
+			addraccs[lowerAddr] = &acc
+
 			counter++
 		}
 	}
@@ -102,6 +127,7 @@ func (mgr *AccountManager) LoadAllAccounts() {
 	mgr.mutex.Lock()
 	mgr.idAccounts = idAccounts
 	mgr.addressCidAccounts = addressCidAccounts
+	mgr.cidAddressAccounts = cidAddressAccounts
 	mgr.mutex.Unlock()
 	log.Println("load all account: ", counter)
 

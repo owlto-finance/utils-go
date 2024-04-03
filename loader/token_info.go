@@ -45,6 +45,19 @@ func (mgr *TokenInfoManager) GetByChainNameTokenAddr(chainName string, tokenAddr
 	return nil, false
 }
 
+func (mgr *TokenInfoManager) GetTokenAddresses(chainName string) []string {
+	addrs := make([]string, 0)
+	mgr.mutex.RLock()
+	tokenAddrs, ok := mgr.chainNameTokenAddrs[strings.ToLower(strings.TrimSpace(chainName))]
+	if ok {
+		for _, token := range tokenAddrs {
+			addrs = append(addrs, token.TokenAddress)
+		}
+	}
+	mgr.mutex.RUnlock()
+	return addrs
+}
+
 func (mgr *TokenInfoManager) LoadAllToken() {
 	// Query the database to select only id and name fields
 	rows, err := mgr.db.Query("SELECT token_name, chain_name, token_address, decimals FROM t_token_info")

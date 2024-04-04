@@ -37,3 +37,21 @@ func GetJsonBigInt(itf interface{}) *big.Int {
 		return new(big.Int)
 	}
 }
+
+func FromUiAmount(amountString string, decimals int) (*big.Int, error) {
+	// Convert the amount string to a big.Float
+	amountFloat, _, err := new(big.Float).SetPrec(236).Parse(amountString, 10)
+	if err != nil {
+		return nil, err
+	}
+
+	// Scale the amount by 10^(decimals)
+	scale := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
+	amountScaled := new(big.Float).SetPrec(236).Mul(amountFloat, new(big.Float).SetPrec(236).SetInt(scale))
+
+	// Convert the scaled amount to a big.Int
+	amountBigInt := new(big.Int)
+	amountScaled.Int(amountBigInt)
+
+	return amountBigInt, nil
+}

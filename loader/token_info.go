@@ -18,19 +18,19 @@ type TokenInfo struct {
 
 type TokenInfoManager struct {
 	chainNameTokenAddrs map[string]map[string]*TokenInfo
-
-	db      *sql.DB
-	alerter alert.Alerter
-	mutex   *sync.RWMutex
+	chainNameTokenNames map[string]map[string]*TokenInfo
+	db                  *sql.DB
+	alerter             alert.Alerter
+	mutex               *sync.RWMutex
 }
 
 func NewTokenInfoManager(db *sql.DB, alerter alert.Alerter) *TokenInfoManager {
 	return &TokenInfoManager{
 		chainNameTokenAddrs: make(map[string]map[string]*TokenInfo),
-
-		db:      db,
-		alerter: alerter,
-		mutex:   &sync.RWMutex{},
+		chainNameTokenNames: make(map[string]map[string]*TokenInfo),
+		db:                  db,
+		alerter:             alerter,
+		mutex:               &sync.RWMutex{},
 	}
 }
 
@@ -40,6 +40,17 @@ func (mgr *TokenInfoManager) GetByChainNameTokenAddr(chainName string, tokenAddr
 	tokenAddrs, ok := mgr.chainNameTokenAddrs[strings.ToLower(strings.TrimSpace(chainName))]
 	if ok {
 		token, ok := tokenAddrs[strings.ToLower(strings.TrimSpace(tokenAddr))]
+		return token, ok
+	}
+	return nil, false
+}
+
+func (mgr *TokenInfoManager) GetByChainNameTokeName(chainName string, tokenName string) (*TokenInfo, bool) {
+	mgr.mutex.RLock()
+	defer mgr.mutex.RUnlock()
+	tokenNames, ok := mgr.chainNameTokenNames[strings.ToLower(strings.TrimSpace(chainName))]
+	if ok {
+		token, ok := tokenNames[strings.ToLower(strings.TrimSpace(tokenName))]
 		return token, ok
 	}
 	return nil, false
@@ -70,6 +81,7 @@ func (mgr *TokenInfoManager) LoadAllToken() {
 	defer rows.Close()
 
 	chainNameTokenAddrs := make(map[string]map[string]*TokenInfo)
+	chainNameTokenNames := make(map[string]map[string]*TokenInfo)
 	counter := 0
 
 	// Iterate over the result set
@@ -90,6 +102,13 @@ func (mgr *TokenInfoManager) LoadAllToken() {
 			}
 			tokenAddrs[strings.ToLower(token.TokenAddress)] = &token
 
+			tokenNames, ok := chainNameTokenNames[strings.ToLower(token.ChainName)]
+			if !ok {
+				tokenNames = make(map[string]*TokenInfo)
+				chainNameTokenNames[strings.ToLower(token.ChainName)] = tokenNames
+			}
+			tokenNames[strings.ToLower(token.TokenName)] = &token
+
 			counter++
 		}
 	}
@@ -102,6 +121,7 @@ func (mgr *TokenInfoManager) LoadAllToken() {
 
 	mgr.mutex.Lock()
 	mgr.chainNameTokenAddrs = chainNameTokenAddrs
+	mgr.chainNameTokenNames = chainNameTokenNames
 	mgr.mutex.Unlock()
 	log.Println("load all token info: ", counter)
 

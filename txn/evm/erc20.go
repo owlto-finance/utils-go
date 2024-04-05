@@ -39,3 +39,25 @@ func Erc20ApproveBody(client *ethclient.Client, senderAddr string, tokenAddr str
 
 	// return calldata, nil
 }
+
+func Erc20TransferBody(client *ethclient.Client, senderAddr string, tokenAddr string, receiverAddr string, amount *big.Int) ([]byte, error) {
+	senderAddr = strings.TrimSpace(senderAddr)
+	tokenAddr = strings.TrimSpace(tokenAddr)
+	receiverAddr = strings.TrimSpace(receiverAddr)
+
+	abi, err := erc20.Erc20MetaData.GetAbi()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := abi.Pack("transfer", common.HexToAddress(receiverAddr), amount)
+	if err != nil {
+		return nil, err
+	}
+
+	gas, err := EstimateGas(client, senderAddr, tokenAddr, nil, data)
+	if err != nil {
+		return nil, err
+	}
+	return ToBody(tokenAddr, nil, data, gas)
+}

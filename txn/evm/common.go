@@ -38,6 +38,18 @@ func EstimateGas(client *ethclient.Client, from string, to string, value *big.In
 	return gas, err
 }
 
+func TransferBody(client *ethclient.Client, senderAddr string, receiverAddr string, amount *big.Int) ([]byte, error) {
+	senderAddr = strings.TrimSpace(senderAddr)
+	receiverAddr = strings.TrimSpace(receiverAddr)
+
+	gas, err := EstimateGas(client, senderAddr, receiverAddr, amount, nil)
+	if err != nil {
+		return nil, err
+	}
+	return ToBody(receiverAddr, amount, nil, gas)
+
+}
+
 func ToBody(to string, value *big.Int, input []byte, gas uint64) ([]byte, error) {
 	to = strings.TrimSpace(to)
 	t := common.HexToAddress(to)

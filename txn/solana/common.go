@@ -2,9 +2,12 @@ package sol
 
 import (
 	"encoding/json"
+	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/system"
 )
 
 type SolanaAccount struct {
@@ -51,6 +54,29 @@ func GetAtaFromPk(pk solana.PublicKey, mintpk solana.PublicKey) (solana.PublicKe
 	}
 
 	return ata, nil
+
+}
+
+func TransferBody(senderAddr string, receiverAddr string, amount *big.Int) ([]byte, error) {
+	senderAddr = strings.TrimSpace(senderAddr)
+	receiverAddr = strings.TrimSpace(receiverAddr)
+
+	senderpk, err := solana.PublicKeyFromBase58(senderAddr)
+	if err != nil {
+		return nil, err
+	}
+	receiverpk, err := solana.PublicKeyFromBase58(receiverAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	inst := system.NewTransferInstruction(
+		amount.Uint64(),
+		senderpk,
+		receiverpk,
+	).Build()
+
+	return ToBody([]solana.Instruction{inst})
 
 }
 

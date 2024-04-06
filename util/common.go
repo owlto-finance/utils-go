@@ -38,7 +38,7 @@ func GetJsonBigInt(itf interface{}) *big.Int {
 	}
 }
 
-func FromUiString(amount string, decimals int) (*big.Int, error) {
+func FromUiString(amount string, decimals int32) (*big.Int, error) {
 	// Convert the amount string to a big.Float
 	amountFloat, _, err := new(big.Float).SetPrec(236).Parse(amount, 10)
 	if err != nil {
@@ -56,7 +56,7 @@ func FromUiString(amount string, decimals int) (*big.Int, error) {
 	return amountBigInt, nil
 }
 
-func FromUiFloat(amount float64, decimals int) *big.Int {
+func FromUiFloat(amount float64, decimals int32) *big.Int {
 	// Convert the amount string to a big.Float
 	amountFloat := new(big.Float).SetPrec(236).SetFloat64(amount)
 

@@ -12,13 +12,12 @@ import (
 
 func GetChecksumAddress(address string) (string, error) {
 	address = strings.TrimSpace(address)
-	prefixLen := 0
-	if strings.HasPrefix(address, "0x") || strings.HasPrefix(address, "0X") {
-		prefixLen = 2
+	if !strings.HasPrefix(address, "0x") && !strings.HasPrefix(address, "0X") {
+		return address, nil
 	}
-	if len(address)-prefixLen == 40 {
+	if len(address) == 42 {
 		return GetChecksumAddress40(address)
-	} else if len(address)-prefixLen == 64 {
+	} else if len(address) == 66 {
 		return GetChecksumAddress64(address)
 	} else {
 		return "", fmt.Errorf("unsupport address len: %s", address)

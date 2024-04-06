@@ -45,7 +45,7 @@ func (mgr *TokenInfoManager) GetByChainNameTokenAddr(chainName string, tokenAddr
 	return nil, false
 }
 
-func (mgr *TokenInfoManager) GetByChainNameTokeName(chainName string, tokenName string) (*TokenInfo, bool) {
+func (mgr *TokenInfoManager) GetByChainNameTokenName(chainName string, tokenName string) (*TokenInfo, bool) {
 	mgr.mutex.RLock()
 	defer mgr.mutex.RUnlock()
 	tokenNames, ok := mgr.chainNameTokenNames[strings.ToLower(strings.TrimSpace(chainName))]

@@ -46,7 +46,7 @@ func SplApproveBody(senderAddr string, tokenAddr string, spenderAddr string, amo
 		[]solana.PublicKey{},
 	).Build()
 
-	return ToBody([]solana.Instruction{inst})
+	return ToBody([]solana.Instruction{inst}, nil)
 
 }
 
@@ -88,6 +88,6 @@ func SqlTransferBody(senderAddr string, tokenAddr string, receiverAddr string, a
 		[]solana.PublicKey{},
 	).Build()
 
-	return ToBody([]solana.Instruction{inst})
+	return ToBody([]solana.Instruction{inst}, nil)
 
 }

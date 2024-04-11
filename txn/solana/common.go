@@ -10,6 +10,11 @@ import (
 	"github.com/gagliardetto/solana-go/programs/system"
 )
 
+type SolanaKeypair struct {
+	PublicKey  solana.PublicKey  `json:"public_key"`
+	PrivateKey solana.PrivateKey `json:"private_key"`
+}
+
 type SolanaAccount struct {
 	PublicKey  solana.PublicKey `json:"public_key"`
 	IsWritable bool             `json:"is_writable"`
@@ -24,6 +29,7 @@ type SolanaInstruction struct {
 
 type SolanaBody struct {
 	Instructions []SolanaInstruction `json:"instructions"`
+	Keypairs     []SolanaKeypair     `json:"keypairs"`
 }
 
 func GetAta(addr string, mint string) (solana.PublicKey, error) {
@@ -76,13 +82,16 @@ func TransferBody(senderAddr string, receiverAddr string, amount *big.Int) ([]by
 		receiverpk,
 	).Build()
 
-	return ToBody([]solana.Instruction{inst})
+	return ToBody([]solana.Instruction{inst}, nil)
 
 }
 
-func ToBody(insts []solana.Instruction) ([]byte, error) {
+func ToBody(insts []solana.Instruction, keypairs []SolanaKeypair) ([]byte, error) {
 	body := SolanaBody{
 		Instructions: make([]SolanaInstruction, 0, len(insts)),
+	}
+	if keypairs != nil {
+		body.Keypairs = keypairs
 	}
 
 	for _, inst := range insts {

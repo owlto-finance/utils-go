@@ -43,7 +43,7 @@ func NewCircleCctpChainManager(db *sql.DB, alerter alert.Alerter) *CircleCctpCha
 
 func (mgr *CircleCctpChainManager) GetDtcUnit(srcChainId int32, dstChainId int32) *big.Int {
 	if srcChainId == 1 || dstChainId == 1 {
-		return big.NewInt(50000000)
+		return big.NewInt(30000000)
 	}
 	return big.NewInt(5000000)
 }

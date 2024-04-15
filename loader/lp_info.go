@@ -39,6 +39,25 @@ func NewLpInfoManager(db *sql.DB, alerter alert.Alerter) *LpInfoManager {
 	}
 }
 
+func (mgr *LpInfoManager) GetLpInfos(version int32, token string, from string, to string) (map[string]*LpInfo, bool) {
+	mgr.mutex.RLock()
+	defer mgr.mutex.RUnlock()
+
+	versionInfos, ok := mgr.lpInfos[version]
+	if ok {
+		ftInfos, ok := versionInfos[strings.ToLower(strings.TrimSpace(token))]
+		if ok {
+			infos, ok := ftInfos[strings.ToLower(strings.TrimSpace(from))]
+			if ok {
+				info, ok := infos[strings.ToLower(strings.TrimSpace(to))]
+				return info, ok
+			}
+
+		}
+	}
+	return nil, false
+}
+
 func (mgr *LpInfoManager) GetLpInfo(version int32, token string, from string, to string, maker string) (*LpInfo, bool) {
 	mgr.mutex.RLock()
 	defer mgr.mutex.RUnlock()

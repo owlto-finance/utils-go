@@ -8,21 +8,21 @@ import (
 )
 
 type SrcTx struct {
-	ChainId         int32
-	TxHash          string
-	Sender          string
-	Receiver        string
-	TargetAddress   sql.NullString
-	Token           string
-	Value           string
-	DstChainid      sql.NullInt32
-	IsTestnet       sql.NullInt32
-	TxTimestamp     int32
-	SrcTokenName    sql.NullString
-	SrcTokenDecimal int32
-	IsCctp          int32
-	SrcNonce        int32
-  ThirdpartyChannel int32
+	ChainId           int32
+	TxHash            string
+	Sender            string
+	Receiver          string
+	TargetAddress     sql.NullString
+	Token             string
+	Value             string
+	DstChainid        sql.NullInt32
+	IsTestnet         sql.NullInt32
+	TxTimestamp       int32
+	SrcTokenName      sql.NullString
+	SrcTokenDecimal   int32
+	IsCctp            int32
+	SrcNonce          int32
+	ThirdpartyChannel int32
 }
 
 type SrcTxManager struct {

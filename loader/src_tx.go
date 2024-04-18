@@ -22,7 +22,7 @@ type SrcTx struct {
 	SrcTokenDecimal int32
 	IsCctp          int32
 	SrcNonce        int32
-  Thirdparty_channel int32
+  ThirdpartyChannel int32
 }
 
 type SrcTxManager struct {

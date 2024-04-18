@@ -11,14 +11,15 @@ import (
 )
 
 type LpInfo struct {
-	Version       int32
-	TokenName     string
-	FromChainName string
-	ToChainName   string
-	MinValue      float64
-	MaxValue      float64
-	MakerAddress  string
-	IsDisabled    int32
+	Version        int32
+	TokenName      string
+	FromChainName  string
+	ToChainName    string
+	MinValue       float64
+	MaxValue       float64
+	BridgeFeeRatio float64
+	MakerAddress   string
+	IsDisabled     int32
 }
 
 type LpInfoManager struct {
@@ -82,7 +83,7 @@ func (mgr *LpInfoManager) GetLpInfo(version int32, token string, from string, to
 
 func (mgr *LpInfoManager) LoadAllLpInfo() {
 	// Query the database to select only id and name fields
-	rows, err := mgr.db.Query("SELECT version, token_name, from_chain, to_chain, maker_address, min_value, max_value, is_disabled FROM t_lp_info")
+	rows, err := mgr.db.Query("SELECT version, token_name, from_chain, to_chain, maker_address, min_value, max_value, is_disabled, bridge_fee_ratio FROM t_lp_info")
 
 	if err != nil || rows == nil {
 		mgr.alerter.AlertText("select t_lp_info error", err)
@@ -99,7 +100,8 @@ func (mgr *LpInfoManager) LoadAllLpInfo() {
 		var info LpInfo
 		var smin string
 		var smax string
-		if err := rows.Scan(&info.Version, &info.TokenName, &info.FromChainName, &info.ToChainName, &info.MakerAddress, &smin, &smax, &info.IsDisabled); err != nil {
+		var sbdgfee string
+		if err := rows.Scan(&info.Version, &info.TokenName, &info.FromChainName, &info.ToChainName, &info.MakerAddress, &smin, &smax, &info.IsDisabled, &sbdgfee); err != nil {
 			mgr.alerter.AlertText("scan t_lp_info row error", err)
 		} else {
 
@@ -118,9 +120,15 @@ func (mgr *LpInfoManager) LoadAllLpInfo() {
 				mgr.alerter.AlertText("t_lp_info max not float", err)
 				continue
 			}
+			bdgfee, err := strconv.ParseFloat(sbdgfee, 64)
+			if err != nil {
+				mgr.alerter.AlertText("t_lp_info bridge fee not float", err)
+				continue
+			}
 
 			info.MinValue = min
 			info.MaxValue = max
+			info.BridgeFeeRatio = bdgfee
 
 			versions, ok := lpInfos[info.Version]
 			if !ok {

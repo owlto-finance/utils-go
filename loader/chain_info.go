@@ -37,6 +37,7 @@ type ChainInfo struct {
 	GasTokenName            string
 	GasTokenDecimal         int32
 	TransferContractAddress sql.NullString
+	DepositContractAddress sql.NullString
 	Client                  interface{}
 }
 
@@ -117,7 +118,7 @@ func (mgr *ChainInfoManager) GetChainInfoByNetcode(netcode int32) (*ChainInfo, b
 
 func (mgr *ChainInfoManager) LoadAllChains() {
 	// Query the database to select only id and name fields
-	rows, err := mgr.db.Query("SELECT id, chainid, real_chainid, name, backend, eip1559, network_code, block_interval, rpc_end_point, disabled, is_testnet, gas_token_name, gas_token_decimal, transfer_contract_address FROM t_chain_info")
+	rows, err := mgr.db.Query("SELECT id, chainid, real_chainid, name, backend, eip1559, network_code, block_interval, rpc_end_point, disabled, is_testnet, gas_token_name, gas_token_decimal, transfer_contract_address, deposit_contract_address FROM t_chain_info")
 
 	if err != nil || rows == nil {
 		mgr.alerter.AlertText("select t_chain_info error", err)
@@ -139,7 +140,7 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 
 		if err := rows.Scan(&chain.Id, &chain.ChainId, &chain.RealChainId, &chain.Name, &chain.Backend, &chain.Eip1559,
 			&chain.NetworkCode, &chain.BlockInterval, &chain.RpcEndPoint, &chain.Disabled, &chain.IsTestnet,
-			&chain.GasTokenName, &chain.GasTokenDecimal, &chain.TransferContractAddress); err != nil {
+			&chain.GasTokenName, &chain.GasTokenDecimal, &chain.TransferContractAddress, &chain.DepositContractAddress); err != nil {
 			mgr.alerter.AlertText("scan t_chain_info row error", err)
 		} else {
 			chain.ChainId = strings.TrimSpace(chain.ChainId)
@@ -148,6 +149,7 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 			chain.RpcEndPoint = strings.TrimSpace(chain.RpcEndPoint)
 			chain.GasTokenName = strings.TrimSpace(chain.GasTokenName)
 			chain.TransferContractAddress.String = strings.TrimSpace(chain.TransferContractAddress.String)
+			chain.DepositContractAddress.String = strings.TrimSpace(chain.DepositContractAddress.String)
 
 			if chain.Backend == EthereumBackend {
 				chain.Client, err = ethclient.Dial(chain.RpcEndPoint)

@@ -58,7 +58,7 @@ func (mgr *SrcTxManager) Save(tx *SrcTx) error {
               VALUES (?, ?, ?, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	// Execute the SQL statement with tx data
-	_, err := mgr.db.Exec(query, tx.ChainId, tx.TxHash, tx.Sender, tx.Receiver, tx.TargetAddress, tx.Token, tx.Value, tx.DstChainid, tx.IsTestnet, tx.TxTimestamp, tx.SrcTokenName, tx.SrcTokenDecimal, tx.IsCctp, tx.SrcNonce, tx.Thirdparty_channel)
+	_, err := mgr.db.Exec(query, tx.ChainId, tx.TxHash, tx.Sender, tx.Receiver, tx.TargetAddress, tx.Token, tx.Value, tx.DstChainid, tx.IsTestnet, tx.TxTimestamp, tx.SrcTokenName, tx.SrcTokenDecimal, tx.IsCctp, tx.SrcNonce, tx.ThirdpartyChannel)
 	if err != nil {
 		mgr.alerter.AlertText("failed to insert src transaction", err)
 		return err

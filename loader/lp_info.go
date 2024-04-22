@@ -23,21 +23,27 @@ type LpInfo struct {
 }
 
 type LpInfoManager struct {
-	lpInfos map[int32]map[string]map[string]map[string]map[string]*LpInfo
-
-	db      *sql.DB
-	alerter alert.Alerter
-	mutex   *sync.RWMutex
+	lpInfos    map[int32]map[string]map[string]map[string]map[string]*LpInfo
+	allLpInfos []*LpInfo
+	db         *sql.DB
+	alerter    alert.Alerter
+	mutex      *sync.RWMutex
 }
 
 func NewLpInfoManager(db *sql.DB, alerter alert.Alerter) *LpInfoManager {
 	return &LpInfoManager{
-		lpInfos: make(map[int32]map[string]map[string]map[string]map[string]*LpInfo),
-
-		db:      db,
-		alerter: alerter,
-		mutex:   &sync.RWMutex{},
+		lpInfos:    make(map[int32]map[string]map[string]map[string]map[string]*LpInfo),
+		allLpInfos: make([]*LpInfo, 0, 100),
+		db:         db,
+		alerter:    alerter,
+		mutex:      &sync.RWMutex{},
 	}
+}
+
+func (mgr *LpInfoManager) GetAllLpInfos() []*LpInfo {
+	mgr.mutex.RLock()
+	defer mgr.mutex.RUnlock()
+	return mgr.allLpInfos
 }
 
 func (mgr *LpInfoManager) GetLpInfos(version int32, token string, from string, to string) (map[string]*LpInfo, bool) {
@@ -93,6 +99,7 @@ func (mgr *LpInfoManager) LoadAllLpInfo() {
 	defer rows.Close()
 
 	lpInfos := make(map[int32]map[string]map[string]map[string]map[string]*LpInfo)
+	allLpInfos := make([]*LpInfo, 0, 100)
 	counter := 0
 
 	// Iterate over the result set
@@ -152,7 +159,7 @@ func (mgr *LpInfoManager) LoadAllLpInfo() {
 				infos[strings.ToLower(info.ToChainName)] = makers
 			}
 			makers[strings.ToLower(info.MakerAddress)] = &info
-
+			allLpInfos = append(allLpInfos, &info)
 			counter++
 		}
 	}
@@ -165,6 +172,7 @@ func (mgr *LpInfoManager) LoadAllLpInfo() {
 
 	mgr.mutex.Lock()
 	mgr.lpInfos = lpInfos
+	mgr.allLpInfos = allLpInfos
 	mgr.mutex.Unlock()
 	log.Println("load all lp info: ", counter)
 

@@ -73,6 +73,7 @@ func (mgr *TokenInfoManager) MergeNativeTokens(chainManager ChainInfoManager) {
 	allIDs := chainManager.GetChainInfoIds()
 
 	mgr.mutex.Lock()
+	defer mgr.mutex.Unlock()
 	for _, id := range allIDs {
 		chainInfo, ok := chainManager.GetChainInfoById(id)
 		if !ok {
@@ -105,8 +106,6 @@ func (mgr *TokenInfoManager) MergeNativeTokens(chainManager ChainInfoManager) {
 		}
 
 	}
-
-	mgr.mutex.Unlock()
 
 }
 

@@ -37,7 +37,7 @@ type ChainInfo struct {
 	GasTokenName            string
 	GasTokenDecimal         int32
 	TransferContractAddress sql.NullString
-	DepositContractAddress sql.NullString
+	DepositContractAddress  sql.NullString
 	Client                  interface{}
 }
 

@@ -73,6 +73,7 @@ func (mgr *TokenInfoManager) MergeNativeTokens(chainManager ChainInfoManager) {
 	allIDs := chainManager.GetChainInfoIds()
 
 	mgr.mutex.Lock()
+	defer mgr.mutex.Unlock()
 	for _, id := range allIDs {
 		chainInfo, ok := chainManager.GetChainInfoById(id)
 		if !ok {
@@ -80,7 +81,7 @@ func (mgr *TokenInfoManager) MergeNativeTokens(chainManager ChainInfoManager) {
 		}
 		var token TokenInfo
 		token.ChainName = chainInfo.Name
-		token.TokenAddress = "0x0"
+		token.TokenAddress = "0x0000000000000000000000000000000000000000"
 		token.TokenName = chainInfo.GasTokenName
 		token.Decimals = chainInfo.GasTokenDecimal
 
@@ -88,19 +89,19 @@ func (mgr *TokenInfoManager) MergeNativeTokens(chainManager ChainInfoManager) {
 		if !ok {
 			tokenAddrs = make(map[string]*TokenInfo)
 			mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)] = tokenAddrs
-			tokenAddrs[strings.ToLower(token.TokenAddress)] = &token
 		}
-
 		tokenNames, ok := mgr.chainNameTokenNames[strings.ToLower(token.ChainName)]
 		if !ok {
 			tokenNames = make(map[string]*TokenInfo)
 			mgr.chainNameTokenNames[strings.ToLower(token.ChainName)] = tokenNames
+		}
+		_, ok = mgr.chainNameTokenNames[strings.ToLower(token.ChainName)][strings.ToLower(token.TokenName)]
+		if !ok {
 			tokenNames[strings.ToLower(token.TokenName)] = &token
+			tokenAddrs[strings.ToLower(token.TokenAddress)] = &token
 		}
 
 	}
-
-	mgr.mutex.Unlock()
 
 }
 

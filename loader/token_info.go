@@ -56,7 +56,7 @@ func (mgr *TokenInfoManager) GetByChainNameTokenName(chainName string, tokenName
 	return nil, false
 }
 
- func (mgr *TokenInfoManager) GetTokenAddresses(chainName string) []string {
+func (mgr *TokenInfoManager) GetTokenAddresses(chainName string) []string {
 	addrs := make([]string, 0)
 	mgr.mutex.RLock()
 	tokenAddrs, ok := mgr.chainNameTokenAddrs[strings.ToLower(strings.TrimSpace(chainName))]
@@ -70,42 +70,42 @@ func (mgr *TokenInfoManager) GetByChainNameTokenName(chainName string, tokenName
 }
 
 func (mgr *TokenInfoManager) MergeNativeTokens(chainManager ChainInfoManager) {
-  allIDs := chainManager.GetChainInfoIds()
+	allIDs := chainManager.GetChainInfoIds()
 
-  mgr.mutex.Lock()
-  for _, id := range allIDs {
-    chainInfo, ok := chainManager.GetChainInfoById(id)
-    if !ok {
-      continue;
-    }
+	mgr.mutex.Lock()
+	for _, id := range allIDs {
+		chainInfo, ok := chainManager.GetChainInfoById(id)
+		if !ok {
+			continue
+		}
 		var token TokenInfo
-    token.ChainName = chainInfo.Name
-    token.TokenAddress = "0x0000000000000000000000000000000000000000"
-    token.TokenName = chainInfo.GasTokenName
-    token.Decimals = chainInfo.GasTokenDecimal
+		token.ChainName = chainInfo.Name
+		token.TokenAddress = "0x0000000000000000000000000000000000000000"
+		token.TokenName = chainInfo.GasTokenName
+		token.Decimals = chainInfo.GasTokenDecimal
 
 		tokenAddrs, ok := mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)]
 		if !ok {
 			tokenAddrs = make(map[string]*TokenInfo)
 			mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)] = tokenAddrs
 		}
-    _, ok := mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)][strings.ToLower(token.TokenAddress)]
-    if !ok {
+		_, ok := mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)][strings.ToLower(token.TokenAddress)]
+		if !ok {
 			tokenAddrs[strings.ToLower(token.TokenAddress)] = &token
-    }
+		}
 
 		tokenNames, ok := mgr.chainNameTokenNames[strings.ToLower(token.ChainName)]
 		if !ok {
 			tokenNames = make(map[string]*TokenInfo)
 			mgr.chainNameTokenNames[strings.ToLower(token.ChainName)] = tokenNames
 		}
-    _, ok := mgr.chainNameTokenNames[strings.ToLower(token.ChainName)][strings.ToLower(token.TokenName)]
-    if !ok {
+		_, ok := mgr.chainNameTokenNames[strings.ToLower(token.ChainName)][strings.ToLower(token.TokenName)]
+		if !ok {
 			tokenNames[strings.ToLower(token.TokenName)] = &token
-    }
+		}
 
-  }
-	
+	}
+
 	mgr.mutex.Unlock()
 
 }

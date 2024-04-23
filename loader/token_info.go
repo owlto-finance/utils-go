@@ -90,11 +90,6 @@ func (mgr *TokenInfoManager) MergeNativeTokens(chainManager ChainInfoManager) {
 			tokenAddrs = make(map[string]*TokenInfo)
 			mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)] = tokenAddrs
 		}
-		_, ok := mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)][strings.ToLower(token.TokenAddress)]
-		if !ok {
-			tokenAddrs[strings.ToLower(token.TokenAddress)] = &token
-		}
-
 		tokenNames, ok := mgr.chainNameTokenNames[strings.ToLower(token.ChainName)]
 		if !ok {
 			tokenNames = make(map[string]*TokenInfo)
@@ -103,6 +98,7 @@ func (mgr *TokenInfoManager) MergeNativeTokens(chainManager ChainInfoManager) {
 		_, ok := mgr.chainNameTokenNames[strings.ToLower(token.ChainName)][strings.ToLower(token.TokenName)]
 		if !ok {
 			tokenNames[strings.ToLower(token.TokenName)] = &token
+			tokenAddrs[strings.ToLower(token.TokenAddress)] = &token
 		}
 
 	}

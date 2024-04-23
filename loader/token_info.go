@@ -69,6 +69,41 @@ func (mgr *TokenInfoManager) GetTokenAddresses(chainName string) []string {
 	return addrs
 }
 
+func (mgr *TokenInfoManager) MergeNativeTokens(chainManager ChainInfoManager) {
+  allIDs := chainManager.GetChainInfoIds()
+
+  mgr.mutex.Lock()
+  for _, id := range allIDs {
+    chainInfo, ok := chainManager.GetChainInfoById(id)
+    if !ok {
+      continue;
+    }
+		var token TokenInfo
+    token.ChainName = chainInfo.Name
+    token.TokenAddress = "0x0"
+    token.TokenName = chainInfo.GasTokenName
+    token.Decimals = chainInfo.GasTokenDecimal
+
+		tokenAddrs, ok := mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)]
+		if !ok {
+			tokenAddrs = make(map[string]*TokenInfo)
+			mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)] = tokenAddrs
+			tokenAddrs[strings.ToLower(token.TokenAddress)] = &token
+		}
+
+		tokenNames, ok := mgr.chainNameTokenNames[strings.ToLower(token.ChainName)]
+		if !ok {
+			tokenNames = make(map[string]*TokenInfo)
+			mgr.chainNameTokenNames[strings.ToLower(token.ChainName)] = tokenNames
+			tokenNames[strings.ToLower(token.TokenName)] = &token
+		}
+
+  }
+	
+	mgr.mutex.Unlock()
+
+}
+
 func (mgr *TokenInfoManager) LoadAllToken() {
 	// Query the database to select only id and name fields
 	rows, err := mgr.db.Query("SELECT token_name, chain_name, token_address, decimals FROM t_token_info")

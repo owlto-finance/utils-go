@@ -30,7 +30,7 @@ func Request(url string, data interface{}, result interface{}) error {
 	}
 
 	// Set request headers
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 
 	// Send the HTTP request
 	resp, err := client.Do(req)

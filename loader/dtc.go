@@ -188,3 +188,22 @@ func (mgr *DtcManager) GetIncludedDtc(tokenName string, fromChainName string, to
 	}
 	return dtcValue, true
 }
+
+func (mgr *DtcManager) GetDtcToInclude(tokenName string, fromChainName string, toChainName string, value float64) (float64, bool) {
+	dtc, ok := mgr.GetDtc(tokenName, fromChainName, toChainName)
+	if !ok {
+		return 0, false
+	}
+
+	var dtcValue float64 = 0
+	if value < dtc.AmountLv1 {
+		dtcValue = dtc.DtcLv1
+	} else if value < dtc.AmountLv2 {
+		dtcValue = dtc.DtcLv2
+	} else if value < dtc.AmountLv3 {
+		dtcValue = dtc.DtcLv3
+	} else {
+		dtcValue = dtc.DtcLv4
+	}
+	return dtcValue, true
+}

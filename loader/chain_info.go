@@ -20,6 +20,10 @@ const (
 	EthereumBackend Backend = iota + 1
 	StarknetBackend
 	SolanaBackend
+	BitcoinBackend
+	ZksliteBackend
+	TonBackend
+	CosmosBackend
 )
 
 type ChainInfo struct {

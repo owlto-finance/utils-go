@@ -169,3 +169,22 @@ func (mgr *DtcManager) LoadAllDtc() {
 	log.Println("load all dtc: ", counter)
 
 }
+
+func (mgr *DtcManager) GetIncludedDtc(tokenName string, fromChainName string, toChainName string, value float64) (float64, bool) {
+	dtc, ok := mgr.GetDtc(tokenName, fromChainName, toChainName)
+	if !ok {
+		return 0, false
+	}
+
+	var dtcValue float64 = 0
+	if value < (dtc.AmountLv1 + dtc.DtcLv1) {
+		dtcValue = dtc.DtcLv1
+	} else if value < (dtc.AmountLv2 + dtc.DtcLv2) {
+		dtcValue = dtc.DtcLv2
+	} else if value < (dtc.AmountLv3 + dtc.DtcLv3) {
+		dtcValue = dtc.DtcLv3
+	} else {
+		dtcValue = dtc.DtcLv4
+	}
+	return dtcValue, true
+}

@@ -22,6 +22,15 @@ type Dtc struct {
 	AmountLv2     float64
 	AmountLv3     float64
 	AmountLv4     float64
+
+	DtcLv1Str    string
+	DtcLv2Str    string
+	DtcLv3Str    string
+	DtcLv4Str    string
+	AmountLv1Str string
+	AmountLv2Str string
+	AmountLv3Str string
+	AmountLv4Str string
 }
 
 type DtcManager struct {
@@ -74,59 +83,51 @@ func (mgr *DtcManager) LoadAllDtc() {
 	// Iterate over the result set
 	for rows.Next() {
 		var dtc Dtc
-		var sdtc1 string
-		var sdtc2 string
-		var sdtc3 string
-		var sdtc4 string
-		var samount1 string
-		var samount2 string
-		var samount3 string
-		var samount4 string
 
-		if err := rows.Scan(&dtc.TokenName, &dtc.FromChainName, &dtc.ToChainName, &sdtc1, &sdtc2, &sdtc3, &sdtc4, &samount1, &samount2, &samount3, &samount4); err != nil {
+		if err := rows.Scan(&dtc.TokenName, &dtc.FromChainName, &dtc.ToChainName, &dtc.DtcLv1Str, &dtc.DtcLv2Str, &dtc.DtcLv3Str, &dtc.DtcLv4Str, &dtc.AmountLv1Str, &dtc.AmountLv2Str, &dtc.AmountLv3Str, &dtc.AmountLv4Str); err != nil {
 			mgr.alerter.AlertText("scan t_dynamic_dtc row error", err)
 		} else {
 			dtc.FromChainName = strings.TrimSpace(dtc.FromChainName)
 			dtc.ToChainName = strings.TrimSpace(dtc.ToChainName)
 			dtc.TokenName = strings.TrimSpace(dtc.TokenName)
 
-			dtc1, err := strconv.ParseFloat(sdtc1, 64)
+			dtc1, err := strconv.ParseFloat(dtc.DtcLv1Str, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_dynamic_dtc dtc1 not float", err)
 				continue
 			}
-			dtc2, err := strconv.ParseFloat(sdtc2, 64)
+			dtc2, err := strconv.ParseFloat(dtc.DtcLv2Str, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_dynamic_dtc dtc2 not float", err)
 				continue
 			}
-			dtc3, err := strconv.ParseFloat(sdtc3, 64)
+			dtc3, err := strconv.ParseFloat(dtc.DtcLv3Str, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_dynamic_dtc dtc3 not float", err)
 				continue
 			}
-			dtc4, err := strconv.ParseFloat(sdtc4, 64)
+			dtc4, err := strconv.ParseFloat(dtc.DtcLv4Str, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_dynamic_dtc dtc4 not float", err)
 				continue
 			}
 
-			amount1, err := strconv.ParseFloat(samount1, 64)
+			amount1, err := strconv.ParseFloat(dtc.AmountLv1Str, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_dynamic_dtc amount1 not float", err)
 				continue
 			}
-			amount2, err := strconv.ParseFloat(samount2, 64)
+			amount2, err := strconv.ParseFloat(dtc.AmountLv2Str, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_dynamic_dtc amount2 not float", err)
 				continue
 			}
-			amount3, err := strconv.ParseFloat(samount3, 64)
+			amount3, err := strconv.ParseFloat(dtc.AmountLv3Str, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_dynamic_dtc amount3 not float", err)
 				continue
 			}
-			amount4, err := strconv.ParseFloat(samount4, 64)
+			amount4, err := strconv.ParseFloat(dtc.AmountLv4Str, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_dynamic_dtc amount4 not float", err)
 				continue
@@ -170,40 +171,36 @@ func (mgr *DtcManager) LoadAllDtc() {
 
 }
 
-func (mgr *DtcManager) GetIncludedDtc(tokenName string, fromChainName string, toChainName string, value float64) (float64, bool) {
+func (mgr *DtcManager) GetIncludedDtc(tokenName string, fromChainName string, toChainName string, value float64) (float64, string, bool) {
 	dtc, ok := mgr.GetDtc(tokenName, fromChainName, toChainName)
 	if !ok {
-		return 0, false
+		return 0, "", false
 	}
 
-	var dtcValue float64 = 0
 	if value < (dtc.AmountLv1 + dtc.DtcLv1) {
-		dtcValue = dtc.DtcLv1
+		return dtc.DtcLv1, dtc.DtcLv1Str, true
 	} else if value < (dtc.AmountLv2 + dtc.DtcLv2) {
-		dtcValue = dtc.DtcLv2
+		return dtc.DtcLv2, dtc.DtcLv2Str, true
 	} else if value < (dtc.AmountLv3 + dtc.DtcLv3) {
-		dtcValue = dtc.DtcLv3
+		return dtc.DtcLv3, dtc.DtcLv3Str, true
 	} else {
-		dtcValue = dtc.DtcLv4
+		return dtc.DtcLv4, dtc.DtcLv4Str, true
 	}
-	return dtcValue, true
 }
 
-func (mgr *DtcManager) GetDtcToInclude(tokenName string, fromChainName string, toChainName string, value float64) (float64, bool) {
+func (mgr *DtcManager) GetDtcToInclude(tokenName string, fromChainName string, toChainName string, value float64) (float64, string, bool) {
 	dtc, ok := mgr.GetDtc(tokenName, fromChainName, toChainName)
 	if !ok {
-		return 0, false
+		return 0, "", false
 	}
 
-	var dtcValue float64 = 0
 	if value < dtc.AmountLv1 {
-		dtcValue = dtc.DtcLv1
+		return dtc.DtcLv1, dtc.DtcLv1Str, true
 	} else if value < dtc.AmountLv2 {
-		dtcValue = dtc.DtcLv2
+		return dtc.DtcLv2, dtc.DtcLv2Str, true
 	} else if value < dtc.AmountLv3 {
-		dtcValue = dtc.DtcLv3
+		return dtc.DtcLv3, dtc.DtcLv3Str, true
 	} else {
-		dtcValue = dtc.DtcLv4
+		return dtc.DtcLv4, dtc.DtcLv4Str, true
 	}
-	return dtcValue, true
 }

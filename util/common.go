@@ -72,11 +72,11 @@ func FromUiFloat(amount float64, decimals int32) *big.Int {
 	return amountBigInt
 }
 
-func StringToUi(amountStr string, decimals int32) (float64, error) {
+func StringToUi(amountStr string, decimals int32) (*big.Float, error) {
 	// Parse amount string to a big.Int
 	amountBigInt, success := new(big.Int).SetString(amountStr, 10)
 	if !success {
-		return 0, fmt.Errorf("invalid amount string: %s", amountStr)
+		return nil, fmt.Errorf("invalid amount string: %s", amountStr)
 	}
 
 	// Convert amount to a big.Float
@@ -87,13 +87,10 @@ func StringToUi(amountStr string, decimals int32) (float64, error) {
 	divider := new(big.Float).SetPrec(236).SetInt(scale)
 	amountFloat.Quo(amountFloat, divider)
 
-	// Convert the scaled amount to float64
-	amountFloat64, _ := amountFloat.Float64()
-
-	return amountFloat64, nil
+	return amountFloat, nil
 }
 
-func BigIntToUi(amount *big.Int, decimals int32) float64 {
+func BigIntToUi(amount *big.Int, decimals int32) *big.Float {
 	// Convert amount to a big.Float
 	amountFloat := new(big.Float).SetPrec(236).SetInt(amount)
 
@@ -102,8 +99,5 @@ func BigIntToUi(amount *big.Int, decimals int32) float64 {
 	divider := new(big.Float).SetPrec(236).SetInt(scale)
 	amountFloat.Quo(amountFloat, divider)
 
-	// Convert the scaled amount to float64
-	amountFloat64, _ := amountFloat.Float64()
-
-	return amountFloat64
+	return amountFloat
 }

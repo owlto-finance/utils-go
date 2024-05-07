@@ -11,15 +11,18 @@ import (
 )
 
 type LpInfo struct {
-	Version        int32
-	TokenName      string
-	FromChainName  string
-	ToChainName    string
-	MinValue       float64
-	MaxValue       float64
-	BridgeFeeRatio float64
-	MakerAddress   string
-	IsDisabled     int32
+	Version           int32
+	TokenName         string
+	FromChainName     string
+	ToChainName       string
+	MinValue          float64
+	MaxValue          float64
+	BridgeFeeRatio    float64
+	MinValueStr       string
+	MaxValueStr       string
+	BridgeFeeRatioStr string
+	MakerAddress      string
+	IsDisabled        int32
 }
 
 type LpInfoManager struct {
@@ -105,10 +108,7 @@ func (mgr *LpInfoManager) LoadAllLpInfo() {
 	// Iterate over the result set
 	for rows.Next() {
 		var info LpInfo
-		var smin string
-		var smax string
-		var sbdgfee string
-		if err := rows.Scan(&info.Version, &info.TokenName, &info.FromChainName, &info.ToChainName, &info.MakerAddress, &smin, &smax, &info.IsDisabled, &sbdgfee); err != nil {
+		if err := rows.Scan(&info.Version, &info.TokenName, &info.FromChainName, &info.ToChainName, &info.MakerAddress, &info.MinValueStr, &info.MaxValueStr, &info.IsDisabled, &info.BridgeFeeRatioStr); err != nil {
 			mgr.alerter.AlertText("scan t_lp_info row error", err)
 		} else {
 
@@ -117,17 +117,17 @@ func (mgr *LpInfoManager) LoadAllLpInfo() {
 			info.TokenName = strings.TrimSpace(info.TokenName)
 			info.MakerAddress = strings.TrimSpace(info.MakerAddress)
 
-			min, err := strconv.ParseFloat(smin, 64)
+			min, err := strconv.ParseFloat(info.MinValueStr, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_lp_info min not float", err)
 				continue
 			}
-			max, err := strconv.ParseFloat(smax, 64)
+			max, err := strconv.ParseFloat(info.MaxValueStr, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_lp_info max not float", err)
 				continue
 			}
-			bdgfee, err := strconv.ParseFloat(sbdgfee, 64)
+			bdgfee, err := strconv.ParseFloat(info.BridgeFeeRatioStr, 64)
 			if err != nil {
 				mgr.alerter.AlertText("t_lp_info bridge fee not float", err)
 				continue

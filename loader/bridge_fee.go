@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+  "math"
 
 	"github.com/owlto-finance/utils-go/alert"
 )
@@ -14,14 +15,15 @@ type BridgeFee struct {
 	TokenName     string
 	FromChainName string
 	ToChainName   string
-	Bridge_fee_ratio_lv1        int64 
-	Bridge_fee_ratio_lv2        int64
-	Bridge_fee_ratio_lv3        int64
-	Bridge_fee_ratio_lv4        int64
+	BridgeFeeRatioLv1        int64 
+	BridgeFeeRatioLv2        int64
+	BridgeFeeRatioLv3        int64
+	BridgeFeeRatioLv4        int64
 	AmountLv1     float64
 	AmountLv2     float64
 	AmountLv3     float64
 	AmountLv4     float64
+  KeepDecimal   int64
 
 	AmountLv1Str string
 	AmountLv2Str string
@@ -62,7 +64,7 @@ func (mgr *BridgeFeeManager) GetBridgeFee(token string, from string, to string) 
 	return nil, false
 }
 
-func (mgr *BridgeFeeManager) LoadAllBridgeFee() {
+func (mgr *BridgeFeeManager) LoadAllBridgeFee(tokenInfoMgr TokenInfoManager) {
 	// Query the database to select only id and name fields
 	rows, err := mgr.db.Query("SELECT token_name, from_chain, to_chain, bridge_fee_ratio_lv1, bridge_fee_ratio_lv2, bridge_fee_ratio_lv3, bridge_fee_ratio_lv4, amount_lv1, amount_lv2, amount_lv3, amount_lv4 FROM t_dynamic_bridge_fee")
 
@@ -71,7 +73,25 @@ func (mgr *BridgeFeeManager) LoadAllBridgeFee() {
 		return
 	}
 
+	kdrows, kderr := mgr.db.Query("SELECT token, keep_decimal FROM t_bridge_fee_decimal")
+  if kderr != nil {
+    mgr.alerter.AlertText("select t_bridge_fee_decimal error", kderr)
+  }
+
 	defer rows.Close()
+  defer kdrows.Close()
+
+  tokenDecimal := make(map[string]int64)
+  for kdrows.Next() {
+    var tokenName string
+    var keepDecimal int64
+		if err := kdrows.Scan(&tokenName, &keepDecimal); err != nil {
+			mgr.alerter.AlertText("scan t_bridge_fee_decimal row error", err)
+		} else {
+      tokenName = strings.TrimSpace(tokenName)
+      tokenDecimal[strings.ToLower(tokenName)] = keepDecimal
+    }
+  }
 
 	tokenFromToBridgeFees := make(map[string]map[string]map[string]*BridgeFee)
 	counter := 0
@@ -80,7 +100,7 @@ func (mgr *BridgeFeeManager) LoadAllBridgeFee() {
 	for rows.Next() {
 		var bridgeFee BridgeFee
 
-		if err := rows.Scan(&bridgeFee.TokenName, &bridgeFee.FromChainName, &bridgeFee.ToChainName, &bridgeFee.Bridge_fee_ratio_lv1, &bridgeFee.Bridge_fee_ratio_lv2, &bridgeFee.Bridge_fee_ratio_lv3, &bridgeFee.Bridge_fee_ratio_lv4, &bridgeFee.AmountLv1Str, &bridgeFee.AmountLv2Str, &bridgeFee.AmountLv3Str, &bridgeFee.AmountLv4Str); err != nil {
+		if err := rows.Scan(&bridgeFee.TokenName, &bridgeFee.FromChainName, &bridgeFee.ToChainName, &bridgeFee.BridgeFeeRatioLv1, &bridgeFee.BridgeFeeRatioLv2, &bridgeFee.BridgeFeeRatioLv3, &bridgeFee.BridgeFeeRatioLv4, &bridgeFee.AmountLv1Str, &bridgeFee.AmountLv2Str, &bridgeFee.AmountLv3Str, &bridgeFee.AmountLv4Str); err != nil {
 			mgr.alerter.AlertText("scan t_dynamic_bridge_fee row error", err)
 		} else {
 			bridgeFee.FromChainName = strings.TrimSpace(bridgeFee.FromChainName)
@@ -112,6 +132,17 @@ func (mgr *BridgeFeeManager) LoadAllBridgeFee() {
 			bridgeFee.AmountLv2 = amount2
 			bridgeFee.AmountLv3 = amount3
 			bridgeFee.AmountLv4 = amount4
+      
+      tokenInfo, ok := tokenInfoMgr.GetByChainNameTokenName(strings.ToLower(bridgeFee.FromChainName), strings.ToLower(bridgeFee.TokenName))
+      dbKeepDecimal, kdexist := tokenDecimal[strings.ToLower(bridgeFee.TokenName)]
+      if !ok && !kdexist {
+        mgr.alerter.AlertText("t_dynamic_bridge_fee keep decimal not found: token " + bridgeFee.TokenName + " chain " + bridgeFee.FromChainName, err)
+				continue
+      } else if kdexist {
+        bridgeFee.KeepDecimal = dbKeepDecimal
+      } else if ok {
+        bridgeFee.KeepDecimal = int64(tokenInfo.Decimals)
+      }
 
 			ftInfos, ok := tokenFromToBridgeFees[strings.ToLower(bridgeFee.TokenName)]
 			if !ok {
@@ -142,20 +173,26 @@ func (mgr *BridgeFeeManager) LoadAllBridgeFee() {
 
 }
 
+func truncateFloat(f float64, prec int64) float64 {
+  multiplier := math.Pow(10, float64(prec))
+  return math.Floor(f * multiplier) / multiplier
+}
+
 func (mgr *BridgeFeeManager) GetIncludedBridgeFee(tokenName string, fromChainName string, toChainName string, value float64, dtc float64) (int64, bool) {
 	bridgeFee, ok := mgr.GetBridgeFee(tokenName, fromChainName, toChainName)
 	if !ok {
 		return 0, false
 	}
-  //parseFloat(bridgefeeItem.amount_lv1) > (parseFloat(amount) - parseFloat(dtc)) * (1 - parseFloat(bridgefeeItem.bridge_fee_ratio_lv1.toString())/1000000.0*0.01)
-  if bridgeFee.AmountLv1 > (value - dtc) * (1 - float64(bridgeFee.Bridge_fee_ratio_lv1) / 1000000 * 0.01) {
-    return bridgeFee.Bridge_fee_ratio_lv1, true
-  } else if bridgeFee.AmountLv2 > (value - dtc) * (1 - float64(bridgeFee.Bridge_fee_ratio_lv2) / 1000000 * 0.01) {
-    return bridgeFee.Bridge_fee_ratio_lv2, true
-  } else if bridgeFee.AmountLv3 > (value - dtc) * (1 - float64(bridgeFee.Bridge_fee_ratio_lv3) / 1000000 * 0.01) {
-    return bridgeFee.Bridge_fee_ratio_lv3, true
+
+//  parseFloat(dynamic_bridge_fee.amount_lv1) > valueWithoutDtc - parseFloat((valueWithoutDtc * parseFloat(dynamic_bridge_fee.bridge_fee_ratio_lv1.toString())/1000000.0*0.01).toFixed(keepDecimal + 1).slice(0, -1))
+  if bridgeFee.AmountLv1 > value - dtc - truncateFloat((value - dtc) * float64(bridgeFee.BridgeFeeRatioLv1) / 1000000 * 0.01, bridgeFee.KeepDecimal) {
+    return bridgeFee.BridgeFeeRatioLv1, true
+  } else if bridgeFee.AmountLv2 > value - dtc - truncateFloat((value - dtc) * float64(bridgeFee.BridgeFeeRatioLv2) / 1000000 * 0.01, bridgeFee.KeepDecimal) {
+    return bridgeFee.BridgeFeeRatioLv2, true
+  } else if bridgeFee.AmountLv3 > value - dtc - truncateFloat((value - dtc) * float64(bridgeFee.BridgeFeeRatioLv3) / 1000000 * 0.01, bridgeFee.KeepDecimal) {
+    return bridgeFee.BridgeFeeRatioLv3, true
   } else {
-    return bridgeFee.Bridge_fee_ratio_lv4, true
+    return bridgeFee.BridgeFeeRatioLv4, true
   }
 }
 
@@ -166,12 +203,12 @@ func (mgr *BridgeFeeManager) GetBridgeFeeNotIncluded(tokenName string, fromChain
 	}
 
 	if value < bridgeFee.AmountLv1 {
-		return bridgeFee.Bridge_fee_ratio_lv1, true
+		return bridgeFee.BridgeFeeRatioLv1, true
 	} else if value < bridgeFee.AmountLv2 {
-		return bridgeFee.Bridge_fee_ratio_lv2, true
+		return bridgeFee.BridgeFeeRatioLv2, true
 	} else if value < bridgeFee.AmountLv3 {
-		return bridgeFee.Bridge_fee_ratio_lv3, true
+		return bridgeFee.BridgeFeeRatioLv3, true
 	} else {
-		return bridgeFee.Bridge_fee_ratio_lv4, true
+		return bridgeFee.BridgeFeeRatioLv4, true
 	}
 }

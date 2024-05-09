@@ -3,11 +3,13 @@ package loader
 import (
 	"database/sql"
 	"log"
+	"math/big"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/owlto-finance/utils-go/alert"
+	"github.com/owlto-finance/utils-go/util"
 )
 
 type Dtc struct {
@@ -203,4 +205,75 @@ func (mgr *DtcManager) GetDtcToInclude(tokenName string, fromChainName string, t
 	} else {
 		return dtc.DtcLv4, dtc.DtcLv4Str, true
 	}
+}
+
+func (mgr *DtcManager) FromUiString(amount string, dtc string, decimals int32) *big.Int {
+	value := big.NewInt(0)
+	if amount != "" {
+		amountValue, err := util.FromUiString(amount, decimals)
+		if err == nil {
+			value.Add(value, amountValue)
+		}
+	}
+
+	if dtc != "" {
+		dtcValue, err := util.FromUiString(dtc, decimals)
+		if err == nil {
+			value.Add(value, dtcValue)
+		}
+	}
+	return value
+}
+
+func (mgr *DtcManager) GetIncludedDtcBigInt(tokenName string, fromChainName string, toChainName string, value *big.Int, decimals int32) (*big.Int, bool) {
+	dtc, ok := mgr.GetDtc(tokenName, fromChainName, toChainName)
+	if !ok {
+		return nil, false
+	}
+
+	if value.Cmp(mgr.FromUiString(dtc.AmountLv1Str, dtc.DtcLv1Str, decimals)) < 0 {
+		return mgr.FromUiString("", dtc.DtcLv1Str, decimals), true
+	} else if value.Cmp(mgr.FromUiString(dtc.AmountLv2Str, dtc.DtcLv2Str, decimals)) < 0 {
+		return mgr.FromUiString("", dtc.DtcLv2Str, decimals), true
+	} else if value.Cmp(mgr.FromUiString(dtc.AmountLv3Str, dtc.DtcLv3Str, decimals)) < 0 {
+		return mgr.FromUiString("", dtc.DtcLv3Str, decimals), true
+	} else {
+		return mgr.FromUiString("", dtc.DtcLv4Str, decimals), true
+	}
+}
+
+func (mgr *DtcManager) GetDtcToIncludeBigInt(tokenName string, fromChainName string, toChainName string, value *big.Int, decimals int32) (*big.Int, bool) {
+	dtc, ok := mgr.GetDtc(tokenName, fromChainName, toChainName)
+	if !ok {
+		return nil, false
+	}
+
+	if value.Cmp(mgr.FromUiString(dtc.AmountLv1Str, "", decimals)) < 0 {
+		return mgr.FromUiString("", dtc.DtcLv1Str, decimals), true
+	} else if value.Cmp(mgr.FromUiString(dtc.AmountLv2Str, "", decimals)) < 0 {
+		return mgr.FromUiString("", dtc.DtcLv2Str, decimals), true
+	} else if value.Cmp(mgr.FromUiString(dtc.AmountLv3Str, "", decimals)) < 0 {
+		return mgr.FromUiString("", dtc.DtcLv3Str, decimals), true
+	} else {
+		return mgr.FromUiString("", dtc.DtcLv4Str, decimals), true
+	}
+}
+
+func (mgr *DtcManager) GetMinValueIncludeGasFeeBigInt(tokenName string, fromChainName string, toChainName string, decimals int32) (*big.Int, bool) {
+	dtc, ok := mgr.GetDtc(tokenName, fromChainName, toChainName)
+	if !ok {
+		return nil, false
+	}
+
+	vals := []string{dtc.DtcLv1Str, dtc.DtcLv2Str, dtc.DtcLv3Str, dtc.DtcLv4Str}
+	for _, val := range vals {
+		value := mgr.FromUiString("", val, decimals)
+		includedDtc, ok := mgr.GetIncludedDtcBigInt(tokenName, fromChainName, toChainName, value, decimals)
+		if ok {
+			if includedDtc.Cmp(value) <= 0 {
+				return value, true
+			}
+		}
+	}
+	return nil, false
 }

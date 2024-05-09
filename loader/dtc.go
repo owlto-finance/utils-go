@@ -259,10 +259,10 @@ func (mgr *DtcManager) GetDtcToIncludeBigInt(tokenName string, fromChainName str
 	}
 }
 
-func (mgr *DtcManager) GetMinValueIncludeGasFeeBigInt(tokenName string, fromChainName string, toChainName string, decimals int32) (*big.Int, bool) {
+func (mgr *DtcManager) GetMinValueIncludeGasFee(tokenName string, fromChainName string, toChainName string, decimals int32) (string, bool) {
 	dtc, ok := mgr.GetDtc(tokenName, fromChainName, toChainName)
 	if !ok {
-		return nil, false
+		return "", false
 	}
 
 	vals := []string{dtc.DtcLv1Str, dtc.DtcLv2Str, dtc.DtcLv3Str, dtc.DtcLv4Str}
@@ -271,9 +271,9 @@ func (mgr *DtcManager) GetMinValueIncludeGasFeeBigInt(tokenName string, fromChai
 		includedDtc, ok := mgr.GetIncludedDtcBigInt(tokenName, fromChainName, toChainName, value, decimals)
 		if ok {
 			if includedDtc.Cmp(value) <= 0 {
-				return value, true
+				return val, true
 			}
 		}
 	}
-	return nil, false
+	return "", false
 }

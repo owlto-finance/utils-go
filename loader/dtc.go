@@ -53,6 +53,12 @@ func NewDtcManager(db *sql.DB, alerter alert.Alerter) *DtcManager {
 	}
 }
 
+func (mgr *DtcManager) GetDtcs() map[string]map[string]map[string]*Dtc {
+	mgr.mutex.RLock()
+	defer mgr.mutex.RUnlock()
+	return mgr.tokenFromToDtcs
+}
+
 func (mgr *DtcManager) GetDtc(token string, from string, to string) (*Dtc, bool) {
 	mgr.mutex.RLock()
 	defer mgr.mutex.RUnlock()

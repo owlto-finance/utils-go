@@ -6,9 +6,10 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-  "math"
+  "math/big"
 
 	"github.com/owlto-finance/utils-go/alert"
+  "github.com/owlto-finance/utils-go/util"
 )
 
 type BridgeFee struct {
@@ -23,7 +24,7 @@ type BridgeFee struct {
 	AmountLv2     float64
 	AmountLv3     float64
 	AmountLv4     float64
-  KeepDecimal   int64
+  KeepDecimal   int32
 
 	AmountLv1Str string
 	AmountLv2Str string
@@ -139,9 +140,9 @@ func (mgr *BridgeFeeManager) LoadAllBridgeFee(tokenInfoMgr TokenInfoManager) {
         mgr.alerter.AlertText("t_dynamic_bridge_fee keep decimal not found: token " + bridgeFee.TokenName + " chain " + bridgeFee.FromChainName, err)
 				continue
       } else if kdexist {
-        bridgeFee.KeepDecimal = dbKeepDecimal
+        bridgeFee.KeepDecimal = int32(dbKeepDecimal)
       } else if ok {
-        bridgeFee.KeepDecimal = int64(tokenInfo.Decimals)
+        bridgeFee.KeepDecimal = int32(tokenInfo.Decimals)
       }
 
 			ftInfos, ok := tokenFromToBridgeFees[strings.ToLower(bridgeFee.TokenName)]
@@ -173,51 +174,59 @@ func (mgr *BridgeFeeManager) LoadAllBridgeFee(tokenInfoMgr TokenInfoManager) {
 
 }
 
-func (mgr *BridgeFeeManager) FromUiString(amount *big.Int, bridgeFee string, decimal int32) *big.Int {
+func (mgr *BridgeFeeManager) FromUiString(amount *big.Int, bridgeFee string, decimal int32, keepDecimal int32) *big.Int {
   value := big.NewInt(0)
-  value.Add(value, *amount)
+  value.Add(value, amount)
 
   if bridgeFee != "" {
     bridgeFeeValue, err := util.FromUiString(bridgeFee, decimal)
     if err == nil {
-      value.Mul(value, bridgeFeeValue)
+      bridgeFeeAmount := new(big.Int)
+      bridgeFeeAmount.Mul(value, bridgeFeeValue)
+      bridgeFeeAmount.Div(value, big.NewInt(100000000))
+
+      scale := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimal - keepDecimal)), nil)
+      modAmount := new(big.Int)
+      modAmount.Mod(bridgeFeeAmount, scale)
+      bridgeFeeAmount.Sub(bridgeFeeAmount, modAmount)
+
+      value.Sub(value, bridgeFeeAmount)
     }
   }
-
-  value.Div(value, big.NewInt(100000000))
 
   return value
 }
 
-func truncateFloat(f float64, prec int64) float64 {
-  multiplier := math.Pow(10, float64(prec))
-  return math.Floor(f * multiplier) / multiplier
-}
 
-func (mgr *BridgeFeeManager) GetIncludedBridgeFee(tokenName string, fromChainName string, toChainName string, value *big.Int, decimal int32) (int64, bool) {
+func (mgr *BridgeFeeManager) GetIncludedBridgeFeeBigInt(tokenName string, fromChainName string, toChainName string, value *big.Int, decimal int32) (int64, bool) {
 	bridgeFee, ok := mgr.GetBridgeFee(tokenName, fromChainName, toChainName)
 	if !ok {
 		return 0, false
 	}
 
-  AmountLv1BigInt, err := util.FromUiString(bridgeFee.AmountLv1, decimal)
+  keepDecimal := decimal
+  if bridgeFee.KeepDecimal < decimal {
+    keepDecimal = bridgeFee.KeepDecimal
+  }
+
+  AmountLv1BigInt, err := util.FromUiString(bridgeFee.AmountLv1Str, decimal)
   if err != nil {
     return 0, false
   }
-  AmountLv2BigInt, err := util.FromUiString(bridgeFee.AmountLv2, decimal)
+  AmountLv2BigInt, err := util.FromUiString(bridgeFee.AmountLv2Str, decimal)
   if err != nil {
     return 0, false
   }
-  AmountLv3BigInt, err := util.FromUiString(bridgeFee.AmountLv3, decimal)
+  AmountLv3BigInt, err := util.FromUiString(bridgeFee.AmountLv3Str, decimal)
   if err != nil {
     return 0, false
   }
 
-  if AmountLv1BigInt.Cmp(mgr.FromUiString(value, strconv.Itoa(bridgeFee.BridgeFeeRatioLv1), decimal)) > 0 {
+  if AmountLv1BigInt.Cmp(mgr.FromUiString(value, strconv.FormatInt(bridgeFee.BridgeFeeRatioLv1, 10), decimal, keepDecimal)) > 0 {
     return bridgeFee.BridgeFeeRatioLv1, true
-  } else if AmountLv2BigInt.Cmp(mgr.FromUiString(value, strconv.Itoa(bridgeFee.BridgeFeeRatioLv2), decimal)) > 0 {
+  } else if AmountLv2BigInt.Cmp(mgr.FromUiString(value, strconv.FormatInt(bridgeFee.BridgeFeeRatioLv2, 10), decimal, keepDecimal)) > 0 {
     return bridgeFee.BridgeFeeRatioLv2, true
-  } else if AmountLv3BigInt.Cmp(mgr.FromUiString(value, strconv.Itoa(bridgeFee.BridgeFeeRatioLv3), decimal)) > 0 {
+  } else if AmountLv3BigInt.Cmp(mgr.FromUiString(value, strconv.FormatInt(bridgeFee.BridgeFeeRatioLv3, 10), decimal, keepDecimal)) > 0 {
     return bridgeFee.BridgeFeeRatioLv3, true
   } else {
     return bridgeFee.BridgeFeeRatioLv4, true

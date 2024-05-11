@@ -173,27 +173,56 @@ func (mgr *BridgeFeeManager) LoadAllBridgeFee(tokenInfoMgr TokenInfoManager) {
 
 }
 
+func (mgr *BridgeFeeManager) FromUiString(amount *big.Int, bridgeFee string, decimal int32) *big.Int {
+  value := big.NewInt(0)
+  value.Add(value, *amount)
+
+  if bridgeFee != "" {
+    bridgeFeeValue, err := util.FromUiString(bridgeFee, decimal)
+    if err == nil {
+      value.Mul(value, bridgeFeeValue)
+    }
+  }
+
+  value.Div(value, big.NewInt(100000000))
+
+  return value
+}
+
 func truncateFloat(f float64, prec int64) float64 {
   multiplier := math.Pow(10, float64(prec))
   return math.Floor(f * multiplier) / multiplier
 }
 
-func (mgr *BridgeFeeManager) GetIncludedBridgeFee(tokenName string, fromChainName string, toChainName string, value float64, dtc float64) (int64, bool) {
+func (mgr *BridgeFeeManager) GetIncludedBridgeFee(tokenName string, fromChainName string, toChainName string, value *big.Int, decimal int32) (int64, bool) {
 	bridgeFee, ok := mgr.GetBridgeFee(tokenName, fromChainName, toChainName)
 	if !ok {
 		return 0, false
 	}
 
-//  parseFloat(dynamic_bridge_fee.amount_lv1) > valueWithoutDtc - parseFloat((valueWithoutDtc * parseFloat(dynamic_bridge_fee.bridge_fee_ratio_lv1.toString())/1000000.0*0.01).toFixed(keepDecimal + 1).slice(0, -1))
-  if bridgeFee.AmountLv1 > value - dtc - truncateFloat((value - dtc) * float64(bridgeFee.BridgeFeeRatioLv1) / 1000000 * 0.01, bridgeFee.KeepDecimal) {
+  AmountLv1BigInt, err := util.FromUiString(bridgeFee.AmountLv1, decimal)
+  if err != nil {
+    return 0, false
+  }
+  AmountLv2BigInt, err := util.FromUiString(bridgeFee.AmountLv2, decimal)
+  if err != nil {
+    return 0, false
+  }
+  AmountLv3BigInt, err := util.FromUiString(bridgeFee.AmountLv3, decimal)
+  if err != nil {
+    return 0, false
+  }
+
+  if AmountLv1BigInt.Cmp(mgr.FromUiString(value, strconv.Itoa(bridgeFee.BridgeFeeRatioLv1), decimal)) > 0 {
     return bridgeFee.BridgeFeeRatioLv1, true
-  } else if bridgeFee.AmountLv2 > value - dtc - truncateFloat((value - dtc) * float64(bridgeFee.BridgeFeeRatioLv2) / 1000000 * 0.01, bridgeFee.KeepDecimal) {
+  } else if AmountLv2BigInt.Cmp(mgr.FromUiString(value, strconv.Itoa(bridgeFee.BridgeFeeRatioLv2), decimal)) > 0 {
     return bridgeFee.BridgeFeeRatioLv2, true
-  } else if bridgeFee.AmountLv3 > value - dtc - truncateFloat((value - dtc) * float64(bridgeFee.BridgeFeeRatioLv3) / 1000000 * 0.01, bridgeFee.KeepDecimal) {
+  } else if AmountLv3BigInt.Cmp(mgr.FromUiString(value, strconv.Itoa(bridgeFee.BridgeFeeRatioLv3), decimal)) > 0 {
     return bridgeFee.BridgeFeeRatioLv3, true
   } else {
     return bridgeFee.BridgeFeeRatioLv4, true
   }
+  
 }
 
 func (mgr *BridgeFeeManager) GetBridgeFeeNotIncluded(tokenName string, fromChainName string, toChainName string, value float64) (int64, bool) {

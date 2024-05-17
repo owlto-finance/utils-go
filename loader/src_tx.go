@@ -45,8 +45,8 @@ func (mgr *SrcTxManager) IsSrcTxExist(chainId int32, txHash string) bool {
 	return err == nil
 }
 
-func (mgr *SrcTxManager) SetIsInvalid(txHash string, isInvalid int32) error {
-	_, err := mgr.db.Exec("update t_src_transaction set is_invalid = ? where tx_hash = ? ", isInvalid, txHash)
+func (mgr *SrcTxManager) SetResult(txHash string, isInvalid int32, isVerified int32) error {
+	_, err := mgr.db.Exec("update t_src_transaction set is_invalid = ?, is_verified = ? where tx_hash = ? ", isInvalid, isVerified, txHash)
 	if err != nil {
 		mgr.alerter.AlertText("update t_transfer is_invalid error :", err)
 		return err

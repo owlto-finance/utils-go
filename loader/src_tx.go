@@ -45,6 +45,15 @@ func (mgr *SrcTxManager) IsSrcTxExist(chainId int32, txHash string) bool {
 	return err == nil
 }
 
+func (mgr *SrcTxManager) SetIsInvalid(txHash string, isInvalid int32) error {
+	_, err := mgr.db.Exec("update t_src_transaction set is_invalid = ? where tx_hash = ? ", isInvalid, txHash)
+	if err != nil {
+		mgr.alerter.AlertText("update t_transfer is_invalid error :", err)
+		return err
+	}
+	return nil
+}
+
 func (mgr *SrcTxManager) Save(tx *SrcTx) error {
 	tx.TxHash = strings.TrimSpace(tx.TxHash)
 	tx.Sender = strings.TrimSpace(tx.Sender)

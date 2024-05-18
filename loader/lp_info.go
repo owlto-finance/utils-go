@@ -46,7 +46,9 @@ func NewLpInfoManager(db *sql.DB, alerter alert.Alerter) *LpInfoManager {
 func (mgr *LpInfoManager) GetAllLpInfos() []*LpInfo {
 	mgr.mutex.RLock()
 	defer mgr.mutex.RUnlock()
-	return mgr.allLpInfos
+	infos := make([]*LpInfo, len(mgr.allLpInfos))
+	copy(infos, mgr.allLpInfos)
+	return infos
 }
 
 func (mgr *LpInfoManager) GetLpInfos(version int32, token string, from string, to string) (map[string]*LpInfo, bool) {

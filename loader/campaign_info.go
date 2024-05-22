@@ -80,6 +80,8 @@ func (mgr *CampaignManager) GetCampaignInfoByName(name string) *CampaignInfo {
 }
 
 func (mgr *CampaignManager) GetAllCampaigns() []*CampaignInfo {
+	mgr.mutex.RLock()
+	defer mgr.mutex.RUnlock()
 	return mgr.campaignsInfo
 }
 

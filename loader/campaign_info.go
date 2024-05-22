@@ -13,7 +13,7 @@ import (
 )
 
 type CampaignInfo struct {
-	Id        uint32
+	Id        uint64
 	Name      string
 	StartTime *time.Time
 	EndTime   *time.Time
@@ -30,7 +30,7 @@ type CampaignInfo struct {
 type CampaignManager struct {
 	campaignsInfo    []*CampaignInfo
 	campaignsNameMap map[string]*CampaignInfo
-	campaignsIdMap   map[uint32]*CampaignInfo
+	campaignsIdMap   map[uint64]*CampaignInfo
 
 	chatID string
 	db     *gorm.DB
@@ -41,7 +41,7 @@ func NewCampaignManager(db *gorm.DB, chatID string) *CampaignManager {
 	return &CampaignManager{
 		campaignsInfo:    make([]*CampaignInfo, 0),
 		campaignsNameMap: make(map[string]*CampaignInfo),
-		campaignsIdMap:   make(map[uint32]*CampaignInfo),
+		campaignsIdMap:   make(map[uint64]*CampaignInfo),
 		chatID:           chatID,
 		db:               db,
 		mutex:            &sync.RWMutex{},
@@ -51,7 +51,7 @@ func NewCampaignManager(db *gorm.DB, chatID string) *CampaignManager {
 func (mgr *CampaignManager) LoadAllCampaignsInfo() {
 	var campaignsInfo []*CampaignInfo
 	var campaignsNameMap map[string]*CampaignInfo
-	var campaignsIdMap map[uint32]*CampaignInfo
+	var campaignsIdMap map[uint64]*CampaignInfo
 	if err := mgr.db.Find(&campaignsInfo).Error; err != nil {
 		_, _ = alert.LarkBot.PostText(fmt.Sprintf("db find t_campaign_info err: %v", err), lark.WithChatID(mgr.chatID))
 		return

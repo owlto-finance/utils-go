@@ -78,3 +78,7 @@ func (mgr *CampaignManager) GetCampaignInfoByName(name string) *CampaignInfo {
 	defer mgr.mutex.RUnlock()
 	return mgr.campaignsNameMap[name]
 }
+
+func (mgr *CampaignManager) GetChatID() string {
+	return mgr.chatID
+}

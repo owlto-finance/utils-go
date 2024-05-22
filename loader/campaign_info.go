@@ -79,6 +79,10 @@ func (mgr *CampaignManager) GetCampaignInfoByName(name string) *CampaignInfo {
 	return mgr.campaignsNameMap[name]
 }
 
+func (mgr *CampaignManager) GetAllCampaigns() []*CampaignInfo {
+	return mgr.campaignsInfo
+}
+
 func (mgr *CampaignManager) GetChatID() string {
 	return mgr.chatID
 }

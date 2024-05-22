@@ -18,6 +18,7 @@ type CampaignInfo struct {
 	StartTime *time.Time
 	EndTime   *time.Time
 	Status    int8
+	ChainId   string
 	ChainName string
 	Direction int8
 	LogoUrl   string

@@ -50,8 +50,8 @@ func NewCampaignManager(db *gorm.DB, chatID string) *CampaignManager {
 
 func (mgr *CampaignManager) LoadAllCampaignsInfo() {
 	var campaignsInfo []*CampaignInfo
-	var campaignsNameMap map[string]*CampaignInfo
-	var campaignsIdMap map[uint64]*CampaignInfo
+	var campaignsNameMap = make(map[string]*CampaignInfo)
+	var campaignsIdMap = make(map[uint64]*CampaignInfo)
 	if err := mgr.db.Table("t_campaign_info").Find(&campaignsInfo).Error; err != nil {
 		_, _ = alert.LarkBot.PostText(fmt.Sprintf("db find t_campaign_info err: %v", err), lark.WithChatID(mgr.chatID))
 		return

@@ -13,7 +13,7 @@ import (
 
 type CampaignInfo struct {
 	*campaignInfoPO
-	Rules *campaignRulesPO
+	Rule *campaignRulesPO
 }
 
 type campaignInfoPO struct {
@@ -88,7 +88,7 @@ func (mgr *CampaignManager) LoadAllCampaignsInfo() {
 	for _, po := range campaignsInfoPOs {
 		tmp := &CampaignInfo{
 			campaignInfoPO: po,
-			Rules:          ruleIdMap[po.Id],
+			Rule:           ruleIdMap[po.Id],
 		}
 		campaignsInfo = append(campaignsInfo, tmp)
 		campaignsNameMap[po.Name] = tmp

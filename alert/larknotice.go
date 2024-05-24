@@ -2,22 +2,20 @@ package alert
 
 import (
 	"github.com/go-lark/lark"
-	"log"
 )
-
-var LarkBot *Bot
 
 type Bot struct {
 	*lark.Bot
 }
 
-func init() {
-	bot := lark.NewChatBot("cli_a6c04dc5b7b81010", "PKM6eJPvJOQP79hFtNXgWhlThrXZkKPt")
+func NewLarkBot(appID, appSecret string) (*Bot, error) {
+	bot := lark.NewChatBot(appID, appSecret)
 	err := bot.StartHeartbeat()
 	if err != nil {
-		log.Fatal("start lark notice heartbeat error:", err)
+		return nil, err
 	}
-	LarkBot = &Bot{
+	larkBot := &Bot{
 		Bot: bot,
 	}
+	return larkBot, nil
 }

@@ -12,6 +12,11 @@ import (
 )
 
 type CampaignInfo struct {
+	*campaignInfoPO
+	Rules *campaignRulesPO
+}
+
+type campaignInfoPO struct {
 	Id        uint64
 	Name      string
 	StartTime *time.Time
@@ -21,9 +26,21 @@ type CampaignInfo struct {
 	ChainName string
 	Direction int8
 	LogoUrl   string
-	Tasks     datatypes.JSON
 	CreatedAt *time.Time
 	UpdatedAt *time.Time
+}
+
+func (*campaignInfoPO) TableName() string {
+	return "t_campaign_info"
+}
+
+type campaignRulesPO struct {
+	Id   uint64
+	Rule datatypes.JSON
+}
+
+func (*campaignRulesPO) TableName() string {
+	return "t_campaign_rules"
 }
 
 type CampaignManager struct {
@@ -48,16 +65,34 @@ func NewCampaignManager(db *gorm.DB, larkBot *alert.Bot, chatID string) *Campaig
 }
 
 func (mgr *CampaignManager) LoadAllCampaignsInfo() {
+	var campaignsInfoPOs []*campaignInfoPO
+	var campaignRulesPOs []*campaignRulesPO
+
 	var campaignsInfo []*CampaignInfo
 	var campaignsNameMap = make(map[string]*CampaignInfo)
 	var campaignsIdMap = make(map[uint64]*CampaignInfo)
-	if err := mgr.db.Table("t_campaign_info").Find(&campaignsInfo).Error; err != nil {
+	if err := mgr.db.Model(&campaignInfoPO{}).Find(&campaignsInfoPOs).Error; err != nil {
 		_, _ = mgr.larkBot.PostText(fmt.Sprintf("db find t_campaign_info err: %v", err), lark.WithChatID(mgr.chatID))
 		return
 	}
-	for _, campaignInfo := range campaignsInfo {
-		campaignsNameMap[campaignInfo.Name] = campaignInfo
-		campaignsIdMap[campaignInfo.Id] = campaignInfo
+	if err := mgr.db.Model(&campaignRulesPO{}).Find(&campaignRulesPOs).Error; err != nil {
+		_, _ = mgr.larkBot.PostText(fmt.Sprintf("db find t_campaign_rules err: %v", err), lark.WithChatID(mgr.chatID))
+		return
+	}
+
+	var ruleIdMap = make(map[uint64]*campaignRulesPO)
+	for _, rule := range campaignRulesPOs {
+		ruleIdMap[rule.Id] = rule
+	}
+
+	for _, po := range campaignsInfoPOs {
+		tmp := &CampaignInfo{
+			campaignInfoPO: po,
+			Rules:          ruleIdMap[po.Id],
+		}
+		campaignsInfo = append(campaignsInfo, tmp)
+		campaignsNameMap[po.Name] = tmp
+		campaignsIdMap[po.Id] = tmp
 	}
 	mgr.campaignsInfo = campaignsInfo
 	mgr.campaignsNameMap = campaignsNameMap

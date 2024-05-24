@@ -68,10 +68,10 @@ func (mgr *CampaignManager) LoadAllCampaignsInfo() {
 	log.Println("load all campaign info: ", len(campaignsInfo))
 }
 
-func (mgr *CampaignManager) GetCampaignInfoById(id uint32) *CampaignInfo {
+func (mgr *CampaignManager) GetCampaignInfoById(id uint64) *CampaignInfo {
 	mgr.mutex.RLock()
 	defer mgr.mutex.RUnlock()
-	return mgr.campaignsInfo[id]
+	return mgr.campaignsIdMap[id]
 }
 
 func (mgr *CampaignManager) GetCampaignInfoByName(name string) *CampaignInfo {

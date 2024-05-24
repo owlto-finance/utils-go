@@ -4,6 +4,8 @@ import (
 	"github.com/go-lark/lark"
 )
 
+var LarkBot *Bot
+
 type Bot struct {
 	*lark.Bot
 }
@@ -17,5 +19,6 @@ func NewLarkBot(appID, appSecret string) (*Bot, error) {
 	larkBot := &Bot{
 		Bot: bot,
 	}
+	LarkBot = larkBot
 	return larkBot, nil
 }

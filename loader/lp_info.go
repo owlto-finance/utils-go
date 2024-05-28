@@ -103,22 +103,25 @@ func (mgr *LpInfoManager) GetTokensByLp(version int32, from string, to string) (
 		return nil, false
 	}
 
+	parmaFrom := strings.ToLower(strings.TrimSpace(from))
+	paramTo := strings.ToLower(strings.TrimSpace(to))
+
 	for tokenName, ftInfos := range versionInfos {
-		if ok {
-			for fromName, ftInfo := range ftInfos {
-				if fromName != strings.ToLower(strings.TrimSpace(from)) {
+
+		for fromName, ftInfo := range ftInfos {
+			if fromName != parmaFrom {
+				continue
+			}
+
+			for toName, _ := range ftInfo {
+				if toName != paramTo {
 					continue
 				}
-
-				for toName, _ := range ftInfo {
-					if toName != strings.ToLower(strings.TrimSpace(to)) {
-						continue
-					}
-					getTokensByLp = append(getTokensByLp, strings.ToUpper(tokenName))
-					break
-				}
+				getTokensByLp = append(getTokensByLp, strings.ToUpper(tokenName))
+				break
 			}
 		}
+
 	}
 	return getTokensByLp, true
 }

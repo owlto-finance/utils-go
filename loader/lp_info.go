@@ -92,6 +92,40 @@ func (mgr *LpInfoManager) GetLpInfo(version int32, token string, from string, to
 	return nil, false
 }
 
+func (mgr *LpInfoManager) GetTokensByLp(version int32, from string, to string) ([]string, bool) {
+	mgr.mutex.RLock()
+	defer mgr.mutex.RUnlock()
+
+	versionInfos, ok := mgr.lpInfos[version]
+	var getTokensByLp []string
+
+	if !ok {
+		return nil, false
+	}
+
+	parmaFrom := strings.ToLower(strings.TrimSpace(from))
+	paramTo := strings.ToLower(strings.TrimSpace(to))
+
+	for tokenName, ftInfos := range versionInfos {
+
+		for fromName, ftInfo := range ftInfos {
+			if fromName != parmaFrom {
+				continue
+			}
+
+			for toName, _ := range ftInfo {
+				if toName != paramTo {
+					continue
+				}
+				getTokensByLp = append(getTokensByLp, strings.ToUpper(tokenName))
+				break
+			}
+		}
+
+	}
+	return getTokensByLp, true
+}
+
 func (mgr *LpInfoManager) LoadAllLpInfo() {
 	// Query the database to select only id and name fields
 	rows, err := mgr.db.Query("SELECT version, token_name, from_chain, to_chain, maker_address, min_value, max_value, is_disabled, bridge_fee_ratio FROM t_lp_info")

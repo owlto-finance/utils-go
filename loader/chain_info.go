@@ -38,6 +38,7 @@ type ChainInfo struct {
 	Icon                    string
 	BlockInterval           int32
 	RpcEndPoint             string
+	ExplorerUrl             string
 	Disabled                int8
 	IsTestnet               int8
 	OrderWeight             int32
@@ -45,6 +46,7 @@ type ChainInfo struct {
 	GasTokenDecimal         int32
 	TransferContractAddress sql.NullString
 	DepositContractAddress  sql.NullString
+	Layer1                  sql.NullString
 	Client                  interface{}
 }
 
@@ -125,7 +127,7 @@ func (mgr *ChainInfoManager) GetChainInfoByNetcode(netcode int32) (*ChainInfo, b
 
 func (mgr *ChainInfoManager) LoadAllChains() {
 	// Query the database to select only id and name fields
-	rows, err := mgr.db.Query("SELECT id, chainid, real_chainid, name, alias_name, backend, eip1559, network_code, icon, block_interval, rpc_end_point, disabled, is_testnet, order_weight, gas_token_name, gas_token_decimal, transfer_contract_address, deposit_contract_address FROM t_chain_info")
+	rows, err := mgr.db.Query("SELECT id, chainid, real_chainid, name, alias_name, backend, eip1559, network_code, icon, block_interval, rpc_end_point, explorer_url, disabled, is_testnet, order_weight, gas_token_name, gas_token_decimal, transfer_contract_address, deposit_contract_address, layer1 FROM t_chain_info")
 
 	if err != nil || rows == nil {
 		mgr.alerter.AlertText("select t_chain_info error", err)
@@ -146,8 +148,8 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 		var chain ChainInfo
 
 		if err := rows.Scan(&chain.Id, &chain.ChainId, &chain.RealChainId, &chain.Name, &chain.AliasName, &chain.Backend, &chain.Eip1559,
-			&chain.NetworkCode, &chain.Icon, &chain.BlockInterval, &chain.RpcEndPoint, &chain.Disabled, &chain.IsTestnet, &chain.OrderWeight,
-			&chain.GasTokenName, &chain.GasTokenDecimal, &chain.TransferContractAddress, &chain.DepositContractAddress); err != nil {
+			&chain.NetworkCode, &chain.Icon, &chain.BlockInterval, &chain.RpcEndPoint, &chain.ExplorerUrl, &chain.Disabled, &chain.IsTestnet, &chain.OrderWeight,
+			&chain.GasTokenName, &chain.GasTokenDecimal, &chain.TransferContractAddress, &chain.DepositContractAddress, &chain.Layer1); err != nil {
 			mgr.alerter.AlertText("scan t_chain_info row error", err)
 		} else {
 			chain.ChainId = strings.TrimSpace(chain.ChainId)
@@ -156,9 +158,11 @@ func (mgr *ChainInfoManager) LoadAllChains() {
 			chain.AliasName = strings.TrimSpace(chain.AliasName)
 			chain.Icon = strings.TrimSpace(chain.Icon)
 			chain.RpcEndPoint = strings.TrimSpace(chain.RpcEndPoint)
+			chain.ExplorerUrl = strings.TrimSpace(chain.ExplorerUrl)
 			chain.GasTokenName = strings.TrimSpace(chain.GasTokenName)
 			chain.TransferContractAddress.String = strings.TrimSpace(chain.TransferContractAddress.String)
 			chain.DepositContractAddress.String = strings.TrimSpace(chain.DepositContractAddress.String)
+			chain.Layer1.String = strings.TrimSpace(chain.Layer1.String)
 
 			if chain.Backend == EthereumBackend {
 				chain.Client, err = ethclient.Dial(chain.RpcEndPoint)

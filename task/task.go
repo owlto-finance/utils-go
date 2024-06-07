@@ -3,6 +3,7 @@ package task
 import (
 	"context"
 	"log"
+	"runtime/debug"
 	"time"
 )
 
@@ -10,7 +11,7 @@ func RunTask(fn func()) {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("Recovered from panic: %v", r)
+				log.Printf("Recovered from panic: %v, stack: %s", r, string(debug.Stack()))
 			}
 		}()
 		fn()

@@ -11,7 +11,7 @@ import (
 
 type PopularList struct {
 	ChainName     string
-	PopularWeight       int32
+	PopularWeight map[string]int32
 }
 
 type PopularListManager struct {
@@ -32,19 +32,20 @@ func NewPopularListManager(db *sql.DB, alerter alert.Alerter) *PopularListManage
 	}
 }
 
-func (mgr *PopularListManager) GetPopularWeight(chain string) (int32, bool) {
+func (mgr *PopularListManager) GetPopularWeight(weights map[string]int32, chain string) bool {
 	mgr.mutex.RLock()
 	defer mgr.mutex.RUnlock()
-  plInfo, ok := mgr.chainToPopularList[strings.ToLower(strings.TrimSpace(chain))]
+	plInfo, ok := mgr.chainToPopularList[strings.ToLower(strings.TrimSpace(chain))]
 	if ok {
-		return plInfo.PopularWeight, ok
+		weights = plInfo.PopularWeight
+		return ok
 	}
-	return -1, false
+	return false
 }
 
 func (mgr *PopularListManager) LoadAllPopularList() {
 	// Query the database to select only id and name fields
-	rows, err := mgr.db.Query("SELECT chain_name, popular_weight FROM t_popular_list")
+	rows, err := mgr.db.Query("SELECT chain_name, popular_weight, tag FROM t_popular_list")
 
 	if err != nil || rows == nil {
 		mgr.alerter.AlertText("select t_popular_list error", err)
@@ -53,19 +54,27 @@ func (mgr *PopularListManager) LoadAllPopularList() {
 
 	defer rows.Close()
 
-  chainToPopularList := make(map[string]*PopularList)
+	chainToPopularList := make(map[string]*PopularList)
 	counter := 0
 
 	// Iterate over the result set
 	for rows.Next() {
-		var popularList PopularList
+		var weight int32
+		var chainName, tag string
 
-		if err := rows.Scan(&popularList.ChainName, &popularList.PopularWeight); err != nil {
+		if err := rows.Scan(&chainName, &weight, &tag); err != nil {
 			mgr.alerter.AlertText("scan t_popular_list row error", err)
 		} else {
-      popularList.ChainName = strings.TrimSpace(popularList.ChainName)
+			chainName = strings.ToLower(strings.TrimSpace(chainName))
 
-			chainToPopularList[strings.ToLower(popularList.ChainName)] = &popularList
+			var popularList *PopularList
+			if pl, ok := chainToPopularList[chainName]; ok {
+				popularList = pl
+			}
+			popularList.ChainName = chainName
+			popularList.PopularWeight[strings.TrimSpace(tag)] = weight
+
+			chainToPopularList[chainName] = popularList
 
 			counter++
 		}
@@ -78,9 +87,8 @@ func (mgr *PopularListManager) LoadAllPopularList() {
 	}
 
 	mgr.mutex.Lock()
-  mgr.chainToPopularList = chainToPopularList
+	mgr.chainToPopularList = chainToPopularList
 	mgr.mutex.Unlock()
 	log.Println("load all popular list: ", counter)
 
 }
-

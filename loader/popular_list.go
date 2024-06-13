@@ -15,7 +15,7 @@ type PopularList struct {
 }
 
 type PopularListManager struct {
-	chainToPopularList map[string]*PopularList
+	chainToPopularList map[string]PopularList
 
 	db      *sql.DB
 	alerter alert.Alerter
@@ -24,7 +24,7 @@ type PopularListManager struct {
 
 func NewPopularListManager(db *sql.DB, alerter alert.Alerter) *PopularListManager {
 	return &PopularListManager{
-		chainToPopularList: make(map[string]*PopularList),
+		chainToPopularList: make(map[string]PopularList),
 
 		db:      db,
 		alerter: alerter,
@@ -54,7 +54,7 @@ func (mgr *PopularListManager) LoadAllPopularList() {
 
 	defer rows.Close()
 
-	chainToPopularList := make(map[string]*PopularList)
+	chainToPopularList := make(map[string]PopularList)
 	counter := 0
 
 	// Iterate over the result set
@@ -67,7 +67,7 @@ func (mgr *PopularListManager) LoadAllPopularList() {
 		} else {
 			chainName = strings.ToLower(strings.TrimSpace(chainName))
 
-			var popularList *PopularList
+			var popularList PopularList
 			if pl, ok := chainToPopularList[chainName]; ok {
 				popularList = pl
 			}

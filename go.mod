@@ -10,6 +10,7 @@ require (
 	github.com/gagliardetto/gofuzz v1.2.2
 	github.com/gagliardetto/solana-go v1.9.3
 	github.com/gagliardetto/treeout v0.1.4
+	github.com/go-lark/lark v1.14.1
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pelletier/go-toml v1.9.5

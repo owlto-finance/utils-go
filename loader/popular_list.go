@@ -68,6 +68,7 @@ func (mgr *PopularListManager) LoadAllPopularList() {
 			chainName = strings.ToLower(strings.TrimSpace(chainName))
 
 			var popularList PopularList
+      popularList.PopularWeight = make(map[string]int32)
 			if pl, ok := chainToPopularList[chainName]; ok {
 				popularList = pl
 			}

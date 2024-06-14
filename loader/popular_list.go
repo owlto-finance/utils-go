@@ -37,7 +37,9 @@ func (mgr *PopularListManager) GetPopularWeight(weights map[string]int32, chain 
 	defer mgr.mutex.RUnlock()
 	plInfo, ok := mgr.chainToPopularList[strings.ToLower(strings.TrimSpace(chain))]
 	if ok {
-		weights = plInfo.PopularWeight
+		for t, w := range plInfo.PopularWeight {
+			weights[t] = w
+		}
 		return ok
 	}
 	return false
@@ -68,7 +70,7 @@ func (mgr *PopularListManager) LoadAllPopularList() {
 			chainName = strings.ToLower(strings.TrimSpace(chainName))
 
 			var popularList PopularList
-      popularList.PopularWeight = make(map[string]int32)
+			popularList.PopularWeight = make(map[string]int32)
 			if pl, ok := chainToPopularList[chainName]; ok {
 				popularList = pl
 			}

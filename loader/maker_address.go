@@ -42,7 +42,7 @@ func NewMakerAddressManager(db *sql.DB) *MakerAddressManager {
 
 func (mgr *MakerAddressManager) LoadAllMakerAddresses() {
 	// Query the database for all maker address groups
-	groupRows, err := mgr.db.Query("SELECT id, group_name, env FROM maker_address_groups")
+	groupRows, err := mgr.db.Query("SELECT id, group_name, env FROM t_maker_address_groups")
 	if err != nil || groupRows == nil {
 		log.Errorf("select maker_address_groups error: %v", err)
 		return
@@ -73,7 +73,7 @@ func (mgr *MakerAddressManager) LoadAllMakerAddresses() {
 	}
 
 	// Query the database for all maker addresses
-	addressRows, err := mgr.db.Query("SELECT id, group_id, backend, address FROM maker_addresses")
+	addressRows, err := mgr.db.Query("SELECT id, group_id, backend, address FROM t_maker_addresses")
 	if err != nil || addressRows == nil {
 		log.Errorf("select maker_addresses error: %v", err)
 		return

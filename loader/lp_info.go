@@ -10,6 +10,10 @@ import (
 	"github.com/owlto-finance/utils-go/alert"
 )
 
+const (
+	LpInfoVersion int32 = 1
+)
+
 type LpInfo struct {
 	Version           int32
 	TokenName         string

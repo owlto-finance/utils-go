@@ -206,3 +206,11 @@ func Fatal(args ...interface{}) {
 func Fatalf(format string, args ...interface{}) {
 	log.Fatalf(format, args...)
 }
+
+func Panic(args ...interface{}) {
+	log.Panic(args...)
+}
+
+func Panicf(format string, args ...interface{}) {
+	log.Panicf(format, args...)
+}

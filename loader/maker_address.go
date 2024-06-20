@@ -26,17 +26,19 @@ type MakerAddress struct {
 }
 
 type MakerAddressManager struct {
-	groupIdAddress map[int64]*MakerAddress
-	envGroup       map[string][]*MakerAddress
+	groupIdAddress        map[int64]*MakerAddress
+	envGroup              map[string][]*MakerAddress
+	backendAddressToGroup map[Backend]map[string]int64
 
 	db *sql.DB
 }
 
 func NewMakerAddressManager(db *sql.DB) *MakerAddressManager {
 	return &MakerAddressManager{
-		groupIdAddress: make(map[int64]*MakerAddress),
-		envGroup:       make(map[string][]*MakerAddress),
-		db:             db,
+		groupIdAddress:        make(map[int64]*MakerAddress),
+		envGroup:              make(map[string][]*MakerAddress),
+		backendAddressToGroup: make(map[Backend]map[string]int64),
+		db:                    db,
 	}
 }
 
@@ -90,6 +92,11 @@ func (mgr *MakerAddressManager) LoadAllMakerAddresses() {
 		if group, ok := groups[address.GroupId]; ok {
 			group.Addresses = append(group.Addresses, &address)
 		}
+
+		if _, ok := mgr.backendAddressToGroup[address.Backend]; !ok {
+			mgr.backendAddressToGroup[address.Backend] = make(map[string]int64)
+		}
+		mgr.backendAddressToGroup[address.Backend][address.Address] = address.GroupId
 	}
 
 	if err = addressRows.Err(); err != nil {
@@ -112,4 +119,13 @@ func (mgr *MakerAddressManager) GetMakerAddressesByEnv(env string) []*MakerAddre
 
 func (mgr *MakerAddressManager) GetMakerAddressByGroupId(groupId int64) *MakerAddress {
 	return mgr.groupIdAddress[groupId]
+}
+
+func (mgr *MakerAddressManager) GetGroupIDByBackendAndAddress(backend Backend, address string) int64 {
+	if addressMap, ok := mgr.backendAddressToGroup[backend]; ok {
+		if groupId, ok := addressMap[address]; ok {
+			return groupId
+		}
+	}
+	return 0
 }

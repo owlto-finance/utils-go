@@ -82,6 +82,8 @@ func (mgr *MakerAddressManager) LoadAllMakerAddresses() {
 	}
 	defer addressRows.Close()
 
+	backendAddressToGroup := make(map[Backend]map[string]int64)
+
 	for addressRows.Next() {
 		var address MakerAddressPO
 		if err = addressRows.Scan(&address.Id, &address.GroupId, &address.Backend, &address.Address); err != nil {
@@ -93,10 +95,11 @@ func (mgr *MakerAddressManager) LoadAllMakerAddresses() {
 			group.Addresses = append(group.Addresses, &address)
 		}
 
-		if _, ok := mgr.backendAddressToGroup[address.Backend]; !ok {
-			mgr.backendAddressToGroup[address.Backend] = make(map[string]int64)
+		// Populate tempBackendAddressToGroup mapping
+		if _, ok := backendAddressToGroup[address.Backend]; !ok {
+			backendAddressToGroup[address.Backend] = make(map[string]int64)
 		}
-		mgr.backendAddressToGroup[address.Backend][address.Address] = address.GroupId
+		backendAddressToGroup[address.Backend][address.Address] = address.GroupId
 	}
 
 	if err = addressRows.Err(); err != nil {
@@ -110,6 +113,8 @@ func (mgr *MakerAddressManager) LoadAllMakerAddresses() {
 		envGroup[group.Env] = append(envGroup[group.Env], group)
 	}
 	mgr.envGroup = envGroup
+	mgr.backendAddressToGroup = backendAddressToGroup
+
 	log.Infof("load all maker addresses: %d", len(groups))
 }
 

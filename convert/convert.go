@@ -1,6 +1,7 @@
 package convert
 
 import (
+	"encoding/json"
 	"math"
 	"math/big"
 	"strconv"
@@ -77,4 +78,9 @@ func FormatDecimalString(inputStr string, decimalPlaces int) string {
 func ConvertAndScale(input string, scale int32) string {
 	value, _, _ := new(big.Float).SetPrec(236).Parse(input, 10)
 	return value.Quo(value, big.NewFloat(math.Pow10(int(scale)))).String()
+}
+
+func ConvertToJsonString(obj interface{}) string {
+	jsonData, _ := json.Marshal(obj)
+	return string(jsonData)
 }

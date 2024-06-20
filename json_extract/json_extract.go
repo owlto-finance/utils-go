@@ -73,8 +73,8 @@ func ExtractStringValueFromJSON(jsonData string, path string) (string, error) {
 }
 
 func ExtractStringValueFromObj(obj interface{}, path string) (string, error) {
-	jsonData := ConvertToJsonString(obj)
-	value, err := ExtractValueFromJSON(jsonData, path)
+	jsonData, _ := json.Marshal(obj)
+	value, err := ExtractValueFromJSON(string(jsonData), path)
 	if err != nil {
 		return "", err
 	}
@@ -95,8 +95,8 @@ func ExtractInt64ValueFromJSON(jsonData string, path string) (int64, error) {
 }
 
 func ExtractInt64ValueFromObj(obj interface{}, path string) (int64, error) {
-	jsonData := ConvertToJsonString(obj)
-	value, err := ExtractValueFromJSON(jsonData, path)
+	jsonData, _ := json.Marshal(obj)
+	value, err := ExtractValueFromJSON(string(jsonData), path)
 	if err != nil {
 		return 0, err
 	}
@@ -122,8 +122,8 @@ func ExtractInt32ValueFromJSON(jsonData string, path string) (int32, error) {
 }
 
 func ExtractInt32ValueFromObj(obj interface{}, path string) (int32, error) {
-	jsonData := ConvertToJsonString(obj)
-	value, err := ExtractValueFromJSON(jsonData, path)
+	jsonData, _ := json.Marshal(obj)
+	value, err := ExtractValueFromJSON(string(jsonData), path)
 	if err != nil {
 		return 0, err
 	}
@@ -148,8 +148,8 @@ func ExtractSliceValueFromJSON(jsonData string, path string) ([]interface{}, err
 }
 
 func ExtractSliceValueFromObj(obj interface{}, path string) ([]interface{}, error) {
-	jsonData := ConvertToJsonString(obj)
-	value, err := ExtractValueFromJSON(jsonData, path)
+	jsonData, _ := json.Marshal(obj)
+	value, err := ExtractValueFromJSON(string(jsonData), path)
 	if err != nil {
 		return nil, err
 	}
@@ -158,9 +158,4 @@ func ExtractSliceValueFromObj(obj interface{}, path string) ([]interface{}, erro
 	} else {
 		return nil, fmt.Errorf("not an array: %s", path)
 	}
-}
-
-func ConvertToJsonString(obj interface{}) string {
-	jsonData, _ := json.Marshal(obj)
-	return string(jsonData)
 }

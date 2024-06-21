@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func IsHexStringZero(hexString string) bool {
@@ -100,4 +102,8 @@ func BigIntToUi(amount *big.Int, decimals int32) *big.Float {
 	amountFloat.Quo(amountFloat, divider)
 
 	return amountFloat
+}
+
+func IsEvmAddress(address string, chainID int32) bool {
+	return common.IsHexAddress(address) && chainID != 666666666 && chainID != 83797601
 }

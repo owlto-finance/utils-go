@@ -17,6 +17,14 @@ func GenerateLogID() string {
 	return fmt.Sprintf("%s%s", timestamp, randomPart)
 }
 
+func GetLogId(ctx context.Context) string {
+	logId := ctx.Value("logId")
+	if LogId, ok := logId.(string); ok {
+		return LogId
+	}
+	return ""
+}
+
 func WithLogIDCtx(ctx context.Context, logId string) context.Context {
 	return context.WithValue(ctx, "logId", logId)
 }

@@ -1,4 +1,4 @@
-package page
+package util
 
 func NormPage(page int) int {
 	if page <= 0 {

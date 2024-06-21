@@ -25,6 +25,10 @@ func GetLogId(ctx context.Context) string {
 	return ""
 }
 
+func SetLogId(ctx context.Context, logId string) context.Context {
+	return context.WithValue(ctx, "logId", logId)
+}
+
 func WithLogIDCtx(ctx context.Context, logId string) context.Context {
 	return context.WithValue(ctx, "logId", logId)
 }

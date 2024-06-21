@@ -161,7 +161,7 @@ func getColorByLevel(level logrus.Level) string {
 }
 
 func findCaller() (string, int) {
-	for skip := 8; ; skip++ {
+	for skip := 7; ; skip++ {
 		pc, file, line, ok := runtime.Caller(skip)
 		if !ok {
 			return "unknown", 0
@@ -231,45 +231,41 @@ func Panicf(format string, args ...interface{}) {
 }
 
 // CtxInfo logs an info message with context fields
-func CtxInfo(ctx context.Context, message string) {
-	CtxWithFields(ctx).Info(message)
+func CtxInfo(ctx context.Context, args ...interface{}) {
+	CtxWithFields(ctx).Info(args...)
 }
 
 // CtxInfof logs a formatted info message with context fields
 func CtxInfof(ctx context.Context, format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	CtxWithFields(ctx).Info(message)
+	CtxWithFields(ctx).Infof(format, args...)
 }
 
 // CtxError logs an error message with context fields
-func CtxError(ctx context.Context, message string) {
-	CtxWithFields(ctx).Error(message)
+func CtxError(ctx context.Context, args ...interface{}) {
+	CtxWithFields(ctx).Error(args...)
 }
 
 // CtxErrorf logs a formatted error message with context fields
 func CtxErrorf(ctx context.Context, format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	CtxWithFields(ctx).Error(message)
+	CtxWithFields(ctx).Errorf(format, args...)
 }
 
 // CtxDebug logs a debug message with context fields
-func CtxDebug(ctx context.Context, message string) {
-	CtxWithFields(ctx).Debug(message)
+func CtxDebug(ctx context.Context, args ...interface{}) {
+	CtxWithFields(ctx).Debug(args...)
 }
 
 // CtxDebugf logs a formatted debug message with context fields
 func CtxDebugf(ctx context.Context, format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	CtxWithFields(ctx).Debug(message)
+	CtxWithFields(ctx).Debugf(format, args...)
 }
 
 // CtxWarn logs a warning message with context fields
-func CtxWarn(ctx context.Context, message string) {
-	CtxWithFields(ctx).Warn(message)
+func CtxWarn(ctx context.Context, args ...interface{}) {
+	CtxWithFields(ctx).Warn(args...)
 }
 
 // CtxWarnf logs a formatted warning message with context fields
 func CtxWarnf(ctx context.Context, format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	CtxWithFields(ctx).Warn(message)
+	CtxWithFields(ctx).Warnf(format, args...)
 }

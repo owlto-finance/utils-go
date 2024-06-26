@@ -54,6 +54,9 @@ func (w *SolanaRpc) GetAccount(ctx context.Context, ownerAddr string) (*rpc.Acco
 }
 
 func (w *SolanaRpc) GetTokenInfo(ctx context.Context, tokenAddr string) (string, int32, error) {
+	if util.IsHexStringZero(tokenAddr) {
+		return "SOL", 9, nil
+	}
 	tokenInfo, ok := w.tokenInfoMgr.GetByChainNameTokenAddr(w.chainInfo.Name, tokenAddr)
 	if ok {
 		return tokenInfo.TokenName, tokenInfo.Decimals, nil

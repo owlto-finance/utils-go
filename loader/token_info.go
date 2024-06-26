@@ -45,6 +45,30 @@ func (mgr *TokenInfoManager) GetByChainNameTokenAddr(chainName string, tokenAddr
 	return nil, false
 }
 
+func (mgr *TokenInfoManager) AddToken(chainName string, tokenName string, tokenAddr string, decimals int32) {
+	mgr.mutex.Lock()
+	defer mgr.mutex.Unlock()
+	var token TokenInfo
+	token.ChainName = strings.TrimSpace(chainName)
+	token.TokenAddress = strings.TrimSpace(tokenAddr)
+	token.TokenName = strings.TrimSpace(tokenName)
+	token.Decimals = decimals
+
+	tokenAddrs, ok := mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)]
+	if !ok {
+		tokenAddrs = make(map[string]*TokenInfo)
+		mgr.chainNameTokenAddrs[strings.ToLower(token.ChainName)] = tokenAddrs
+	}
+	tokenAddrs[strings.ToLower(token.TokenAddress)] = &token
+
+	tokenNames, ok := mgr.chainNameTokenNames[strings.ToLower(token.ChainName)]
+	if !ok {
+		tokenNames = make(map[string]*TokenInfo)
+		mgr.chainNameTokenNames[strings.ToLower(token.ChainName)] = tokenNames
+	}
+	tokenNames[strings.ToLower(token.TokenName)] = &token
+}
+
 func (mgr *TokenInfoManager) GetByChainNameTokenName(chainName string, tokenName string) (*TokenInfo, bool) {
 	mgr.mutex.RLock()
 	defer mgr.mutex.RUnlock()

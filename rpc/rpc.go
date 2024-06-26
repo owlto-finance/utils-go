@@ -15,6 +15,7 @@ type Rpc interface {
 	IsTxSuccess(ctx context.Context, hash string) (bool, int64, error)
 	GetAllowance(ctx context.Context, ownerAddr string, tokenAddr string, spenderAddr string) (*big.Int, error)
 	GetBalance(ctx context.Context, ownerAddr string, tokenAddr string) (*big.Int, error)
+	GetTokenInfo(ctx context.Context, tokenAddr string) (string, int32, error)
 }
 
 func GetRpc(chainInfo *loader.ChainInfo) (Rpc, error) {

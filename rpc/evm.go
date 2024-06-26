@@ -37,6 +37,10 @@ func (w *EvmRpc) Backend() int32 {
 	return 1
 }
 
+func (w *EvmRpc) GetTokenInfo(ctx context.Context, tokenAddr string) (string, int32, error) {
+	return "", 0, fmt.Errorf("no impl")
+}
+
 func (w *EvmRpc) GetAllowance(ctx context.Context, ownerAddr string, tokenAddr string, spenderAddr string) (*big.Int, error) {
 	econtract, err := erc20.NewErc20(common.HexToAddress(tokenAddr), w.GetClient())
 	if err != nil {

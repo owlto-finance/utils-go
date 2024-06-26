@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/blocto/solana-go-sdk/program/metaplex/token_metadata"
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
@@ -17,12 +18,14 @@ import (
 )
 
 type SolanaRpc struct {
-	chainInfo *loader.ChainInfo
+	tokenInfoMgr *loader.TokenInfoManager
+	chainInfo    *loader.ChainInfo
 }
 
 func NewSolanaRpc(chainInfo *loader.ChainInfo) *SolanaRpc {
 	return &SolanaRpc{
-		chainInfo: chainInfo,
+		chainInfo:    chainInfo,
+		tokenInfoMgr: loader.NewTokenInfoManager(nil, nil),
 	}
 }
 
@@ -48,6 +51,53 @@ func (w *SolanaRpc) GetAccount(ctx context.Context, ownerAddr string) (*rpc.Acco
 	} else {
 		return rsp.Value, nil
 	}
+}
+
+func (w *SolanaRpc) GetTokenInfo(ctx context.Context, tokenAddr string) (string, int32, error) {
+	tokenInfo, ok := w.tokenInfoMgr.GetByChainNameTokenAddr(w.chainInfo.Name, tokenAddr)
+	if ok {
+		return tokenInfo.TokenName, tokenInfo.Decimals, nil
+	}
+
+	mintpk, err := solana.PublicKeyFromBase58(tokenAddr)
+	if err != nil {
+		return "", 0, err
+	}
+
+	metapk, _, err := solana.FindTokenMetadataAddress(mintpk)
+	if err != nil {
+		return "", 0, err
+	}
+	rsp, err := w.GetClient().GetAccountInfo(
+		ctx,
+		metapk,
+	)
+	if err != nil {
+		return "", 0, err
+	}
+
+	meta, err := token_metadata.MetadataDeserialize(rsp.GetBinary())
+	if err != nil {
+		return "", 0, err
+	}
+
+	rsp, err = w.GetClient().GetAccountInfo(
+		ctx,
+		mintpk,
+	)
+	if err != nil {
+		return "", 0, err
+	}
+	var mintAccount token.Mint
+	decoder := bin.NewBorshDecoder(rsp.GetBinary())
+	err = mintAccount.UnmarshalWithDecoder(decoder)
+	if err != nil {
+		return "", 0, err
+	}
+
+	w.tokenInfoMgr.AddToken(w.chainInfo.Name, meta.Data.Symbol, tokenAddr, int32(mintAccount.Decimals))
+	return meta.Data.Symbol, int32(mintAccount.Decimals), nil
+
 }
 
 func (w *SolanaRpc) GetSplAccount(ctx context.Context, ownerAddr string, tokenAddr string) (*token.Account, error) {

@@ -15,6 +15,7 @@ type ExchangeInfo struct {
 	Icon        string
 	Disabled    int8
 	OfficialUrl string
+	OrderWeight int32
 }
 
 type ExchangeInfoManager struct {
@@ -60,7 +61,7 @@ func (mgr *ExchangeInfoManager) GetExchangeInfoByName(name string) (*ExchangeInf
 
 func (mgr *ExchangeInfoManager) LoadAllExchanges() {
 	// Query the database to select only id and name fields
-	rows, err := mgr.db.Query("SELECT id, name, icon, disabled, official_url FROM t_exchange_info")
+	rows, err := mgr.db.Query("SELECT id, name, icon, disabled, official_url, order_weight FROM t_exchange_info")
 
 	if err != nil || rows == nil {
 		mgr.alerter.AlertText("select t_exchange_info error", err)
@@ -77,7 +78,7 @@ func (mgr *ExchangeInfoManager) LoadAllExchanges() {
 	// Iterate over the result set
 	for rows.Next() {
 		var xchg ExchangeInfo
-		if err := rows.Scan(&xchg.Id, &xchg.Name, &xchg.Icon, &xchg.Disabled, &xchg.OfficialUrl); err != nil {
+		if err := rows.Scan(&xchg.Id, &xchg.Name, &xchg.Icon, &xchg.Disabled, &xchg.OfficialUrl, &xchg.OrderWeight); err != nil {
 			mgr.alerter.AlertText("scan t_exchange_info row error", err)
 		} else {
 			xchg.Name = strings.TrimSpace(xchg.Name)

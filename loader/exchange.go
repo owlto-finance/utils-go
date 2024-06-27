@@ -20,6 +20,7 @@ type ExchangeInfo struct {
 type ExchangeInfoManager struct {
 	idExchanges   map[int32]*ExchangeInfo
 	nameExchanges map[string]*ExchangeInfo
+	allExchanges  []*ExchangeInfo
 	db            *sql.DB
 	alerter       alert.Alerter
 	mutex         *sync.RWMutex
@@ -29,10 +30,19 @@ func NewExchangeInfoManager(db *sql.DB, alerter alert.Alerter) *ExchangeInfoMana
 	return &ExchangeInfoManager{
 		idExchanges:   make(map[int32]*ExchangeInfo),
 		nameExchanges: make(map[string]*ExchangeInfo),
+		allExchanges:  make([]*ExchangeInfo, 0, 100),
 		db:            db,
 		alerter:       alerter,
 		mutex:         &sync.RWMutex{},
 	}
+}
+
+func (mgr *ExchangeInfoManager) GetAllExchanges() []*ExchangeInfo {
+	mgr.mutex.RLock()
+	defer mgr.mutex.RUnlock()
+	infos := make([]*ExchangeInfo, len(mgr.allExchanges))
+	copy(infos, mgr.allExchanges)
+	return infos
 }
 
 func (mgr *ExchangeInfoManager) GetExchangeInfoById(id int32) (*ExchangeInfo, bool) {
@@ -61,6 +71,7 @@ func (mgr *ExchangeInfoManager) LoadAllExchanges() {
 
 	idExchanges := make(map[int32]*ExchangeInfo)
 	nameExchanges := make(map[string]*ExchangeInfo)
+	allExchanges := make([]*ExchangeInfo, 0, 100)
 	counter := 0
 
 	// Iterate over the result set
@@ -72,6 +83,7 @@ func (mgr *ExchangeInfoManager) LoadAllExchanges() {
 			xchg.Name = strings.TrimSpace(xchg.Name)
 			idExchanges[xchg.Id] = &xchg
 			nameExchanges[strings.ToLower(xchg.Name)] = &xchg
+			allExchanges = append(allExchanges, &xchg)
 			counter++
 		}
 	}
@@ -85,6 +97,7 @@ func (mgr *ExchangeInfoManager) LoadAllExchanges() {
 	mgr.mutex.Lock()
 	mgr.idExchanges = idExchanges
 	mgr.nameExchanges = nameExchanges
+	mgr.allExchanges = allExchanges
 	mgr.mutex.Unlock()
 	log.Println("load all exchanges : ", counter)
 

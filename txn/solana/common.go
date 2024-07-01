@@ -28,8 +28,9 @@ type SolanaInstruction struct {
 }
 
 type SolanaBody struct {
-	Instructions []SolanaInstruction `json:"instructions"`
-	Keypairs     []SolanaKeypair     `json:"keypairs"`
+	Instructions []SolanaInstruction                        `json:"instructions"`
+	Keypairs     []SolanaKeypair                            `json:"keypairs"`
+	LookupTables map[solana.PublicKey]solana.PublicKeySlice `json:"lookup_tables"`
 }
 
 func GetAta(addr string, mint string) (solana.PublicKey, error) {
@@ -87,11 +88,19 @@ func TransferBody(senderAddr string, receiverAddr string, amount *big.Int) ([]by
 }
 
 func ToBody(insts []solana.Instruction, keypairs []SolanaKeypair) ([]byte, error) {
+	return ToBodyNew(insts, keypairs, nil)
+}
+
+func ToBodyNew(insts []solana.Instruction, keypairs []SolanaKeypair, lookupTables map[solana.PublicKey]solana.PublicKeySlice) ([]byte, error) {
 	body := SolanaBody{
 		Instructions: make([]SolanaInstruction, 0, len(insts)),
 	}
 	if keypairs != nil {
 		body.Keypairs = keypairs
+	}
+
+	if lookupTables != nil {
+		body.LookupTables = lookupTables
 	}
 
 	for _, inst := range insts {

@@ -53,14 +53,9 @@ func NewApolloSDK(cfg SDKConfig) (*ApolloSDK, error) {
 }
 
 func (sdk *ApolloSDK) GetConfig(namespace, key string) (string, error) {
-
-	cache := sdk.client.GetConfigCache(namespace)
-	if cache == nil {
+	config := sdk.client.GetConfig(namespace)
+	if config == nil {
 		return "", fmt.Errorf("namespace %s not found", namespace)
 	}
-	value, err := cache.Get(key)
-	if err != nil {
-		return "", fmt.Errorf("failed to get key %s from namespace %s: %w", key, namespace, err)
-	}
-	return value.(string), nil
+	return config.GetValue(key), nil
 }

@@ -2,9 +2,10 @@ package apollosdk
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/apolloconfig/agollo/v4"
 	"github.com/apolloconfig/agollo/v4/env/config"
-	"strings"
 )
 
 type SDKConfig struct {
@@ -17,15 +18,12 @@ type SDKConfig struct {
 	BackupConfigPath string
 }
 
-// ApolloSDK 是 Apollo SDK 的结构体
 type ApolloSDK struct {
 	client agollo.Client
 	config SDKConfig
 }
 
-// NewApolloSDK 创建一个新的 ApolloSDK 实例
 func NewApolloSDK(cfg SDKConfig) (*ApolloSDK, error) {
-	// 配置 Apollo 客户端
 	clientConfig := &config.AppConfig{
 		AppID:            cfg.AppID,
 		Cluster:          cfg.Cluster,
@@ -36,7 +34,6 @@ func NewApolloSDK(cfg SDKConfig) (*ApolloSDK, error) {
 	}
 	clientConfig.NamespaceName = strings.Join(cfg.Namespaces, config.Comma)
 
-	// 初始化 Apollo 客户端
 	client, err := agollo.StartWithConfig(func() (*config.AppConfig, error) {
 		return clientConfig, nil
 	})

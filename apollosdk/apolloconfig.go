@@ -49,7 +49,7 @@ func NewApolloSDK(cfg SDKConfig) (*ApolloSDK, error) {
 	return sdk, nil
 }
 
-func (sdk *ApolloSDK) GetConfig(namespace, key string) (string, error) {
+func (sdk *ApolloSDK) GetString(namespace, key string) (string, error) {
 	config := sdk.client.GetConfig(namespace)
 	if config == nil {
 		return "", fmt.Errorf("namespace %s not found", namespace)

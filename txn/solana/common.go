@@ -88,10 +88,14 @@ func TransferBody(senderAddr string, receiverAddr string, amount *big.Int) ([]by
 }
 
 func ToBody(insts []solana.Instruction, keypairs []SolanaKeypair) ([]byte, error) {
-	return ToBodyNew(insts, keypairs, nil)
+	body, err := ToSolanaBody(insts, keypairs, nil)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(body)
 }
 
-func ToBodyNew(insts []solana.Instruction, keypairs []SolanaKeypair, lookupTables map[solana.PublicKey]solana.PublicKeySlice) ([]byte, error) {
+func ToSolanaBody(insts []solana.Instruction, keypairs []SolanaKeypair, lookupTables map[solana.PublicKey]solana.PublicKeySlice) (*SolanaBody, error) {
 	body := SolanaBody{
 		Instructions: make([]SolanaInstruction, 0, len(insts)),
 	}
@@ -128,6 +132,6 @@ func ToBodyNew(insts []solana.Instruction, keypairs []SolanaKeypair, lookupTable
 		body.Instructions = append(body.Instructions, minst)
 	}
 
-	// Marshal the map to a JSON string
-	return json.Marshal(body)
+	return &body, nil
+
 }

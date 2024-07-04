@@ -54,7 +54,7 @@ func (w *SolanaRpc) GetAccount(ctx context.Context, ownerAddr string) (*rpc.Acco
 }
 
 func (w *SolanaRpc) GetTokenInfo(ctx context.Context, tokenAddr string) (string, int32, error) {
-	if util.IsHexStringZero(tokenAddr) {
+	if util.IsHexStringZero(tokenAddr) || tokenAddr == "11111111111111111111111111111111" {
 		return "SOL", 9, nil
 	}
 	tokenInfo, ok := w.tokenInfoMgr.GetByChainNameTokenAddr(w.chainInfo.Name, tokenAddr)
@@ -143,7 +143,7 @@ func (w *SolanaRpc) GetBalance(ctx context.Context, ownerAddr string, tokenAddr 
 	ownerAddr = strings.TrimSpace(ownerAddr)
 	tokenAddr = strings.TrimSpace(tokenAddr)
 
-	if util.IsHexStringZero(tokenAddr) {
+	if util.IsHexStringZero(tokenAddr) || tokenAddr == "11111111111111111111111111111111" {
 		account, err := w.GetAccount(ctx, ownerAddr)
 		if err != nil {
 			if err == rpc.ErrNotFound {

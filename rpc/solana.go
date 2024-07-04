@@ -71,16 +71,19 @@ func (w *SolanaRpc) GetTokenInfo(ctx context.Context, tokenAddr string) (string,
 	if err != nil {
 		return "", 0, err
 	}
+
+	symbol := "UNKNOWN"
 	rsp, err := w.GetClient().GetAccountInfo(
 		ctx,
 		metapk,
 	)
-	if err != nil {
-		return "", 0, err
-	}
-
-	meta, err := token_metadata.MetadataDeserialize(rsp.GetBinary())
-	if err != nil {
+	if err == nil {
+		meta, err := token_metadata.MetadataDeserialize(rsp.GetBinary())
+		if err != nil {
+			return "", 0, err
+		}
+		symbol = meta.Data.Symbol
+	} else if err != rpc.ErrNotFound {
 		return "", 0, err
 	}
 
@@ -98,8 +101,8 @@ func (w *SolanaRpc) GetTokenInfo(ctx context.Context, tokenAddr string) (string,
 		return "", 0, err
 	}
 
-	w.tokenInfoMgr.AddToken(w.chainInfo.Name, meta.Data.Symbol, tokenAddr, int32(mintAccount.Decimals))
-	return meta.Data.Symbol, int32(mintAccount.Decimals), nil
+	w.tokenInfoMgr.AddToken(w.chainInfo.Name, symbol, tokenAddr, int32(mintAccount.Decimals))
+	return symbol, int32(mintAccount.Decimals), nil
 
 }
 

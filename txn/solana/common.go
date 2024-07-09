@@ -135,7 +135,11 @@ func ToSolanaBody(insts []solana.Instruction, keypairs []SolanaKeypair, lookupTa
 		body.LookupTables = lookupTables
 	}
 
-	body.AddInstructions(insts)
+	err := body.AddInstructions(insts)
+	if err != nil {
+		return nil, err
+	}
+
 	return &body, nil
 
 }

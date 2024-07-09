@@ -33,6 +33,34 @@ type SolanaBody struct {
 	LookupTables map[solana.PublicKey]solana.PublicKeySlice `json:"lookup_tables"`
 }
 
+func (body *SolanaBody) AddInstructions(insts []solana.Instruction) error {
+	for _, inst := range insts {
+		data, err := inst.Data()
+		if err != nil {
+			return err
+		}
+
+		maccs := make([]SolanaAccount, 0, len(inst.Accounts()))
+		for _, acc := range inst.Accounts() {
+			macc := SolanaAccount{
+				PublicKey:  acc.PublicKey,
+				IsWritable: acc.IsWritable,
+				IsSigner:   acc.IsSigner,
+			}
+			maccs = append(maccs, macc)
+		}
+
+		minst := SolanaInstruction{
+			ProgramId: inst.ProgramID(),
+			Accounts:  maccs,
+			Data:      data,
+		}
+
+		body.Instructions = append(body.Instructions, minst)
+	}
+	return nil
+}
+
 func GetAta(addr string, mint string) (solana.PublicKey, error) {
 	pk, err := solana.PublicKeyFromBase58(addr)
 	if err != nil {
@@ -107,31 +135,7 @@ func ToSolanaBody(insts []solana.Instruction, keypairs []SolanaKeypair, lookupTa
 		body.LookupTables = lookupTables
 	}
 
-	for _, inst := range insts {
-		data, err := inst.Data()
-		if err != nil {
-			return nil, err
-		}
-
-		maccs := make([]SolanaAccount, 0, len(inst.Accounts()))
-		for _, acc := range inst.Accounts() {
-			macc := SolanaAccount{
-				PublicKey:  acc.PublicKey,
-				IsWritable: acc.IsWritable,
-				IsSigner:   acc.IsSigner,
-			}
-			maccs = append(maccs, macc)
-		}
-
-		minst := SolanaInstruction{
-			ProgramId: inst.ProgramID(),
-			Accounts:  maccs,
-			Data:      data,
-		}
-
-		body.Instructions = append(body.Instructions, minst)
-	}
-
+	body.AddInstructions(insts)
 	return &body, nil
 
 }
